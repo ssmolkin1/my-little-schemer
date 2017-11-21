@@ -143,17 +143,26 @@ module.exports = {
     return this.car(replaceSpecialSymbols(exp));
   },
 
-  isDefined(name) {
-    return Object.prototype.hasOwnProperty.call(this, name);
+  isPrimitive(name) {
+    if (typeof name === 'string') {
+      return Object.prototype.hasOwnProperty.call(this, name);
+    }
+
+    return false;
   },
 
-  isFunction(name) {
-    return this.isDefined(name) && typeof this[name] === 'function';
+  isLambda(name) {
+    if (this.isPrimitive(name)) {
+      return typeof this[name] === 'function';
+    }
+
+    return typeof name === 'function';
   },
 
   value(exp) {
     if (this.isAtom(exp) || this.isNull(exp)) {
-      if (this.isAtom(exp) && this.isDefined(exp)) {
+      // Allows user defined primitives 
+      if (this.isPrimitive(exp)) {
         return this.value(this[exp]);
       }
 
@@ -163,17 +172,75 @@ module.exports = {
     const first = this.car(exp);
     const rest = this.cdr(exp);
 
-    if (this.isFunction(first)) {
-      if (first === 'lambda' || first === 'define') {
-        return this[first](...rest);
+    if (this.isAtom(first)) {
+      // These key words and functions require special handlers 
+      if (first === 'quote') {
+        return this.car(rest);
       }
 
-      // Evaluation control needs to be handed off specially to these functions
+      if (first === 'lambda') {
+        return this.lambda(...rest);
+      }
+
       if (first === 'cond' || first === '||' || first === '&&') {
         return this[first](rest);
       }
+      
+      // The general lambda handler; primitives cannot be overwritten
+      if (this.isLambda(first)) {
+        if(this.isPrimitive(first)) {
+          return this[first](...this.value(rest));
+        }
 
-      return this[first](...this.value(rest));
+        return first(...this.value(rest));
+      }
+     
+      // Allows user defined primitives 
+      if(this.isPrimitive(first)) {
+        return this.cons(this[first], this.value(rest))
+      }
+
+      return this.cons(first, this.value(rest))
+    }
+
+    // special handler for define
+    const that = this;
+
+    function substitute(n, o, l) {
+      if (that.isNull(l)) {
+        return l;
+      }
+  
+      const first = that.car(l);
+      const rest = that.cdr(l);
+  
+      if (that.isAtom(first)) {
+        if (first === o) {
+          return that.cons(n, substitute(n, o, rest));
+        }
+  
+        // Quoted terms are not substituted 
+        if (first === 'quote') {
+          return l;
+        }
+  
+        return that.cons(first, substitute(n, o, rest));
+      }
+  
+      return that.cons(substitute(n, o, first), substitute(n, o, rest));
+    }
+    
+    const f = this.car(first);
+    
+    if (f === 'define') {
+      const name = this.car(this.cdr(first));
+      const def = this.car(this.cdr(this.cdr(first)));
+      
+      if (this.isPrimitive(name) || (name === 'define') || (name === 'quote') || (name === 'else')) {
+        throw new SyntaxError('Cannot overwrite primitives')
+      }
+
+      return this.value(substitute(def, name, rest));
     }
 
     return this.cons(this.value(first), this.value(rest));
@@ -203,11 +270,7 @@ module.exports = {
     return output;
   },
 
-  quote(exp) {
-    return exp;
-  },
-
-  define(name, exp) {
+  definePrimitive(name, exp) {
     if (!this.isAtom(name)) {
       throw new Error('The Law of Define: The first argument must be an atom.');
     }
@@ -215,7 +278,7 @@ module.exports = {
     this[name] = this.value(exp);
   },
 
-  undefine(name) {
+  undefinePrimitive(name) {
     delete this[name];
   },
 
@@ -261,7 +324,7 @@ module.exports = {
     }
 
     function result(...argValues) {
-      return this.value(replace(func, args, argValues));
+      return that.value(replace(func, args, argValues));
     }
 
     return result;
@@ -273,6 +336,30 @@ module.exports = {
     }
 
     return a === b;
+  },
+
+  isEqual(s1, s2) {
+    if (this.isAtom(s1) && this.isAtom(s2)) {
+      return s1 === s2;
+    }
+
+    if (this.isAtom(s1) || this.isAtom(s2)) {
+      return false;
+    }
+
+    return this.isEqlist(s1, s2);
+  },
+  
+  isEqlist(l1, l2) {
+    if (this.isNull(l1) && this.isNull(l2)) {
+      return true;
+    }
+
+    if (this.isNull(l1) || this.isNull(l2)) {
+      return false;
+    }
+
+    return this.isEqual(this.car(l1), this.car(l2)) && this.isEqual(this.cdr(l1), this.cdr(l2));
   },
 
   '||': function (args) {
@@ -415,5 +502,3 @@ module.exports = {
     return format(convert(exp));
   },
 };
-
-console.log(module.exports);

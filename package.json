@@ -4,7 +4,11 @@
   "main": "index.js",
   "description": "A scheme interpreter providing a minimal set of primitive functions based on The Little Schemer, 4th Ed.",
   "keywords": [
-    "scheme", "interpreter", "little", "schemer", "sam"
+    "scheme",
+    "interpreter",
+    "little",
+    "schemer",
+    "sam"
   ],
   "license": "MIT",
   "author": "Sam Smolkin <sam@future-precedent.org> (http://www.future-precedent.org/)",
