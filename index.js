@@ -55,7 +55,7 @@ module.exports = {
       console.warn(`Warning: Please check that you are using valid Scheme syntax. String representations of Javascript objects and arrays
         may not be handled as expected the jSExpression converter.`);
     }
-    
+
     const that = this;
     let exp = `(${string.slice(0)})`; // clone string wrap string in outer parens (valid expressions must be wrapped in outer parens)
 
@@ -170,7 +170,7 @@ module.exports = {
 
       // Evaluation control needs to be handed off specially to these functions
       if (first === 'cond' || first === '||' || first === '&&' || first === 'quote' ||
-        first === ss.cond || first === ss['||'] || first === ss['&&'] || first === ss.quote) {
+        first === this.cond || first === this['||'] || first === this['&&'] || first === this.quote) {
         return this.isDefined(first) ? this[first](rest) : first(rest);
       }
 
@@ -181,11 +181,17 @@ module.exports = {
   },
 
   evaluate(scheme, js = false, final = false, convert = false) {
-    let input = scheme.slice();
+    let input;
 
     // converts from scheme to JS if not already converted
     if (!js) {
       input = this.jSExpression(scheme);
+    } else if (typeof scheme === 'number') {
+      input = 0 + scheme;
+    } else if (typeof scheme === 'boolean') {
+      input = !!scheme;
+    } else {
+      input = scheme.slice();
     }
 
     // evaluates the input
@@ -287,7 +293,7 @@ module.exports = {
 
     return this.isEqlist(s1, s2);
   },
-  
+
   isEqlist(l1, l2) {
     if (this.isNull(l1) && this.isNull(l2)) {
       return true;
@@ -394,39 +400,68 @@ module.exports = {
       return that.cons(parens(convert(first)), convert(rest));
     }
 
+    function specailSymbols(a) {
+      if (a === '\n') {
+        return '#n';
+      }
+
+      if (a === true) {
+        return '#t';
+      }
+
+      if (a === false) {
+        return '#f';
+      }
+
+      if (a === null) {
+        return '#null';
+      }
+
+      if (a === undefined) {
+        return '#undefined';
+      }
+
+      if (a === Infinity) {
+        return '#Infinity';
+      }
+
+      if (Number.isNaN(a)) {
+        return '#NaN';
+      }
+
+      return a;
+    }
+
+    function replaceSpecialSymbols(s) {
+      if (that.isAtom(s)) {
+        const converted = specailSymbols(s);
+        
+        // Changes numbers back to string if given an atom.
+        // Otherwise numbers are coerced to strings by join() further below
+        if (typeof converted === 'number') {
+          return converted.toString();
+        }
+
+        return converted;
+      }
+
+      if (that.isNull(s)) {
+        return s;
+      }
+
+      const first = that.car(s);
+      const rest = that.cdr(s);
+
+      if (that.isAtom(first)) {
+        return that.cons(specailSymbols(first), replaceSpecialSymbols(rest));
+      }
+
+      return that.cons(replaceSpecialSymbols(first), replaceSpecialSymbols(rest));
+    }
+
     function format(output) {
       if (that.isList(output)) {
-        const replaced = output.map((a) => {
-          if (a === '\n') {
-            return '#n';
-          }
-
-          if (a === true) {
-            return '#t';
-          }
-
-          if (a === false) {
-            return '#f';
-          }
-
-          if (a === null) {
-            return '#null';
-          }
-
-          if (a === undefined) {
-            return '#undefined';
-          }
-
-          if (a === Infinity) {
-            return '#Infinity';
-          }
-
-          if (Number.isNaN(a)) {
-            return '#NaN';
-          }
-
-          return a;
-        });
+        const replaced = replaceSpecialSymbols(output);
 
         const closed = parens(replaced);
 
@@ -434,7 +469,7 @@ module.exports = {
           .replace(/,/g, ' ');
       }
 
-      return output;
+      return replaceSpecialSymbols(output);
     }
 
     return format(convert(exp));
