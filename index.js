@@ -143,12 +143,24 @@ module.exports = {
     return this.car(replaceSpecialSymbols(exp));
   },
 
-  isDefined(name) {
+  isPrimitive(name) {
     return Object.prototype.hasOwnProperty.call(this, name);
   },
 
+  isDefined(name) {
+    return eval(`typeof ${name} !== 'undefined'`);
+  },
+
   isFunction(name) {
-    return this.isDefined(name) ? typeof this[name] === 'function' : typeof name === 'function';
+    if (this.isPrimitive(name)) {
+      return typeof this[name] === 'function';
+    }
+
+    if (this.isDefined(name)) {
+      return eval(`typeof ${name} === 'function`);
+    }
+
+    return typeof name === 'function';
   },
 
   value(exp) {
@@ -209,11 +221,14 @@ module.exports = {
   },
 
   define(name, exp) {
+    const that = this;
+
     if (!this.isAtom(name)) {
       throw new Error('The Law of Define: The first argument must be an atom.');
     }
 
-    this[name] = this.value(exp);
+    eval(`var ${name} = '${that.value(exp)}'`)
+    console.log(name);
   },
 
   undefine(name) {
@@ -440,3 +455,13 @@ module.exports = {
     return format(convert(exp));
   },
 };
+
+const ss = module.exports;
+
+function namespace() {
+  ss.define('bob', 'hope');
+  console.log(ss.isDefined('bob'));
+}
+
+namespace();
+console.log(bob);
