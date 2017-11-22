@@ -148,12 +148,12 @@ module.exports = {
   },
 
   isFunction(name) {
-    return this.isDefined(name) && typeof this[name] === 'function';
+    return this.isDefined(name) ? typeof this[name] === 'function' : typeof name === 'function';
   },
 
   value(exp) {
     if (this.isAtom(exp) || this.isNull(exp)) {
-      if (this.isAtom(exp) && this.isDefined(exp)) {
+      if (this.isDefined(exp)) {
         return this.value(this[exp]);
       }
 
@@ -169,11 +169,12 @@ module.exports = {
       }
 
       // Evaluation control needs to be handed off specially to these functions
-      if (first === 'cond' || first === '||' || first === '&&') {
-        return this[first](rest);
+      if (first === 'cond' || first === '||' || first === '&&' || first === 'quote' ||
+        first === ss.cond || first === ss['||'] || first === ss['&&'] || first === ss.quote) {
+        return this.isDefined(first) ? this[first](rest) : first(rest);
       }
 
-      return this[first](...this.value(rest));
+      return this.isDefined(first) ? this[first](...this.value(rest)) : first(...this.value(rest));
     }
 
     return this.cons(this.value(first), this.value(rest));
@@ -261,7 +262,7 @@ module.exports = {
     }
 
     function result(...argValues) {
-      return this.value(replace(func, args, argValues));
+      return that.value(replace(func, args, argValues));
     }
 
     return result;
@@ -273,6 +274,30 @@ module.exports = {
     }
 
     return a === b;
+  },
+
+  isEqual(s1, s2) {
+    if (this.isAtom(s1) && this.isAtom(s2)) {
+      return s1 === s2;
+    }
+
+    if (this.isAtom(s1) || this.isAtom(s2)) {
+      return false;
+    }
+
+    return this.isEqlist(s1, s2);
+  },
+  
+  isEqlist(l1, l2) {
+    if (this.isNull(l1) && this.isNull(l2)) {
+      return true;
+    }
+
+    if (this.isNull(l1) || this.isNull(l2)) {
+      return false;
+    }
+
+    return this.isEqual(this.car(l1), this.car(l2)) && this.isEqual(this.cdr(l1), this.cdr(l2));
   },
 
   '||': function (args) {
@@ -415,5 +440,3 @@ module.exports = {
     return format(convert(exp));
   },
 };
-
-console.log(module.exports);

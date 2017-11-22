@@ -1,8 +1,52 @@
 # Sam's Little Schemer
-A Scheme interpreter in JavaScript providing a minimal set of primitive functions based on [The Little Schemer, 4th Ed](https://mitpress.mit.edu/books/little-schemer).
+A Scheme interpreter in JavaScript providing a small set of primitive functions inspired by [The Little Schemer, 4th Ed](https://mitpress.mit.edu/books/little-schemer).
 
-## Purpose and philosophy
-This package is meant to provide a fully functional interface for incorporating Scheme into JavaScript applications. The power and flexibility of Scheme syntax can be harnessed to do what pure functional languages do best &mdash; pure functions, recursion, parsing other languages, etc. Using `jsExpression()` to convert strings into jS-Expressions and manipulating them with the Scheme primitive functions provides a powerful way to parse languages. Additional functions can be defined for manipulating S-Expressions and jS-Expressions, either in JavaScript or in Scheme (using `define` and `lambda` ). *Functions defined in Scheme can be used in JavaScript, and vice versa!* The purpose of this package is not necessarily to write in Scheme alone, but to combine Scheme and JavaScript to open up new possibilities. 
+## Design and purpose
+This module provides an interface for integrating Scheme into JavaScript applications. The power and flexibility of Scheme syntax can be harnessed to do what functional languages do best &mdash; pure functions, recursion, parsing other languages, etc. The `jsExpression()` function converts strings representing valid S-Expressions into a useful JavaScript datatype that can be composed and manipulated using Scheme, JavaScript, or Scheme-like JavaScript. The `sExpression()` function converts them back into strings. The purpose is not to write in Scheme alone, but to combine Scheme and JavaScript to open up new possibilities. Hence, the primary goal in interoperability. Output can be passed between Scheme and JavaScript. Functions defined in Scheme can be used in JavaScript, and vice versa!  
+
+### Four ways to write
+There are four ways to write using this module:
+```js 
+const ss = require('sams-little-schemer');
+
+// Scheme
+ss.evaluate(`
+  (cons cat (dog))
+`, false, false, true)  // ( cat dog ) 
+
+// jScheme
+ss.value(['cons', 'bird', ['cdr', ['mouse', 'house']]]) // [ 'bird', 'house' ]
+
+// SchemeJS
+ss.cons(ss.isNull(ss.cdr(['<3'])), ['love'])  // [ true, 'love' ]
+
+// Creatively
+ss.isFinWord = word => word.slice(-1) === '.';
+ss['>'] = (n, m) => n > m;
+
+ss.evaluate(`
+  (define hasRunOnSentence
+    (lambda (p n)
+      (cond
+        ((> n 20) #t)
+        ((isNull p) #f)
+        ((isFinWord (car p)) (hasRunOnSentence (cdr p) 0))
+        (else (hasRunOnSentence (cdr p) (add1 n))))))
+`);
+
+function checkForRunOnSentences(p) {
+  console.log(ss.hasRunOnSentence(ss.jSExpression(`(${p})`), 0) ? 
+`Whoa, you've got some long ones there!` : `This is OK.`);
+}
+
+const para = `She went to the movies.
+  Then she met a friend for ice cream at that one place 
+  she loved so much that she went to that one time.
+  Then she went home.`
+
+checkForRunOnSentences(para); // Whoa, you've got some long ones there!
+
+```
 
 ## Installation
 From the command line:
@@ -102,15 +146,17 @@ The following primitives are defined:
 - `cond`
 - `lambda`
 - `isEqan`
+- `isEqual`
+- `isEqlist`
 - `||`
 - `&&`
 - `sub1`
 - `add1`
 - `isZero`
 
-All work as you would expect. Note that *anything that is not a list is an atom* (including functions, booleans, etc.). Since `?` is an operator in JavaScript, Scheme question forms like `null?` are converted to "is" forms like `isNull`. Also, note that definitions are scoped to the module's namespace (the `ss` object). Anything defined with `define` will be defined inside of `ss`. Thus, `isDefined`, `isFunction` and the evaluation functions will only recognize definitions and perform substitutions if the terms are defined inside of `ss`.  
+All work as you would expect. Note that *anything that is not a list is an atom* (including functions, booleans, etc.). Since `?` is an operator in JavaScript, Scheme question forms like `null?` are converted to "is" forms like `isNull`. 
 
-In addition, a few helpful arithmetic functions have been defined:
+In addition, a few helpful arithmetic functions have been defined as primitives:
 
 - `+`
 - `-`
@@ -118,7 +164,7 @@ In addition, a few helpful arithmetic functions have been defined:
 - `/`
 - `%`
 
-All are equivalent to the JavaScript symbol, although usage follows Scheme syntax with the operator in the front: `(+ n m)` or `['+', 'n', 'm']` or `ss['+'](n, m)` , depending on the context you are writing in. Arithmetic functions are not restricted to integers. Rational numbers are allowed.
+All are equivalent to the JavaScript symbol, although usage follows Scheme syntax with the operator in the front: `(+ n m)` or `['+', 'n', 'm']` or `ss['+'](n, m)` , depending on the context you are writing in. The number set is not restricted to integers. Rational numbers are allowed.
 
 Finally, there are the parsing and evaluation functions:
 
@@ -127,4 +173,17 @@ Finally, there are the parsing and evaluation functions:
 - `value`
 - `evaluate`
 
-### Defining further functions
+### Pure functions and define
+All of the predefined functions are pure functions, with the exception of `define`. The language primitives are all defined within the module's namespace, i.e. the `ss` object. Variables defined with `define` / `define()` will be defined inside of `ss` . Thus, it is an impure function which changes the state of the module and essentially creates new primitives. While this is not how actual Scheme works, it is useful for integrating with JavaScript. Note that `isDefined` and the evaluators will only recognize definitions and perform substitutions if the variables are defined inside of `ss`. However, you can also pass functions and variables from other namespaces into the evaluator in your jS-Expressions:
+
+```js
+function pickle(x) {
+  return ss.cons('orange', x);
+}
+
+const juice = ['ice', 'cream'];
+
+const js1 = ['car', ['pickle', 'juice']]; // pickle
+const js2 = ['car', [pickle, juice]]; // orange
+const js3 = ['cdr', [pickle, juice]]; // [ 'ice', 'cream' ]
+```
