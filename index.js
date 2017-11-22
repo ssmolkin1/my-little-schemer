@@ -222,13 +222,13 @@ module.exports = {
 
   define(name, exp) {
     const that = this;
+    const geval = eval;
 
     if (!this.isAtom(name)) {
       throw new Error('The Law of Define: The first argument must be an atom.');
     }
 
-    eval(`var ${name} = '${that.value(exp)}'`)
-    console.log(name);
+    geval(`var ${name} = '${that.value(exp)}'`)
   },
 
   undefine(name) {
