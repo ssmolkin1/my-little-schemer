@@ -68,7 +68,7 @@ module.exports = {
     if (typeof string !== 'string') {
       throw new Error('The argument must be a string');
     }
-    
+
     const that = this;
     let exp = `(${string.slice(0)})`; // clone string wrap string in outer parens (valid expressions must be wrapped in outer parens)
 
@@ -112,7 +112,7 @@ module.exports = {
 
     function specailSymbols(a) {
       const def = this.SPEC_SYM.defined;
-      const prim = this.SPEC_SYM.prim;
+      const prim = this.SPEC_SYM.primitive;
 
       if (Object.prototype.hasOwnProperty.call(def, a)) {
         return def[a];
