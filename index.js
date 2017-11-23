@@ -7,8 +7,12 @@ module.exports = {
     return !this.isList(exp);
   },
 
+  isObject(a) {
+    return this.isAtom(a) && (typeof a === 'object')
+  },
+
   isNumber(exp) {
-    return (!!exp || exp === 0) && typeof exp === 'number';
+    return !Number.isNaN(exp) && typeof exp === 'number';
   },
 
   isNull(l) {
@@ -46,16 +50,25 @@ module.exports = {
     return n;
   },
 
+  SPEC_SYM: {
+    primitive: {
+      '#t': true,
+      '#f': false,
+      '#n': '\n',
+      '#NaN': NaN,
+      '#Infinity': Infinity,
+      '#null': null,
+      '#undefined': undefined,
+    },
+
+    defined: {},
+  },
+
   jSExpression(string) {
     if (typeof string !== 'string') {
       throw new Error('The argument must be a string');
     }
-
-    if (/[\[\]{}]/.test(string)) {
-      console.warn(`Warning: Please check that you are using valid Scheme syntax. String representations of Javascript objects and arrays
-        may not be handled as expected the jSExpression converter.`);
-    }
-
+    
     const that = this;
     let exp = `(${string.slice(0)})`; // clone string wrap string in outer parens (valid expressions must be wrapped in outer parens)
 
@@ -76,12 +89,12 @@ module.exports = {
       .join(',')
       // wrap everything except parentheses in double quotes (required to parse JSON)
       .replace(/([^,()]+),/g, '"$1",')
-      // unwrap numbers from double quotes
-      .replace(/"(\d+\.?\d*|\.\d+)"/g, '$1')
-      // unwrwap objects from double quotes
-      .replace(/"{/g, '{')
-      .replace(/}"/g, '}')
-      // .replace(/,,,/g, ',')
+      // unwrap numbers from double quotes, except those which are object keys
+      .replace(/"(\d+\.?\d*|\.\d+)"([^:])/g, '$1$2')
+      // handles JSON objects
+      .replace(/([\]}])"/g, '$1')
+      .replace(/"([\[{])/g, '$1')
+      .replace(/"?,,,"?/g, ',')
       // handle grammatical commas
       // .replace(/,,/g, ',","')
       // handle grammatical periods
@@ -98,32 +111,15 @@ module.exports = {
       .replace(/,?\)/g, ']'));
 
     function specailSymbols(a) {
-      if (a === '#t') {
-        return true;
+      const def = this.SPEC_SYM.defined;
+      const prim = this.SPEC_SYM.prim;
+
+      if (Object.prototype.hasOwnProperty.call(def, a)) {
+        return def[a];
       }
 
-      if (a === '#f') {
-        return false;
-      }
-
-      if (a === '#n') {
-        return '\n';
-      }
-
-      if (a === '#NaN') {
-        return NaN;
-      }
-
-      if (a === '#Infinity') {
-        return Infinity;
-      }
-
-      if (a === '#null') {
-        return null;
-      }
-
-      if (a === '#undefined') {
-        return undefined;
+      if (Object.prototype.hasOwnProperty.call(prim, a)) {
+        return prim[a];
       }
 
       return a;
@@ -278,17 +274,33 @@ module.exports = {
     return result;
   },
 
-  isEqan(a, b) {
-    if (this.isList(a) || this.isList(b)) {
-      throw new TypeError('The Law of isEqan: Eqan can only be used to compare two atoms');
+  isEqobj(o1, o2) {
+    if (!this.isObject(o1) || !this.isObject(o2)) {
+      throw new TypeError('The Law of isEqobj: isEqobj can only be used to compare two objects.');
     }
 
-    return a === b;
+    return this.isEqlist(Object.values(o1), Object.values(o2));
+  },
+
+  isEqan(a1, a2) {
+    if (this.isList(a1) || this.isList(a2)) {
+      throw new TypeError('The Law of isEqan: isEqan can only be used to compare two atoms.');
+    }
+
+    if (this.isObject(a1) && this.isObject(a2)) {
+      return this.isEqobj(a1, a2);
+    }
+
+    if (this.isObject(a1) || this.isObject(a2)) {
+      return false;
+    }
+
+    return a1 === a2;
   },
 
   isEqual(s1, s2) {
     if (this.isAtom(s1) && this.isAtom(s2)) {
-      return s1 === s2;
+      return this.isEqan(s1, s2);
     }
 
     if (this.isAtom(s1) || this.isAtom(s2)) {
@@ -297,8 +309,12 @@ module.exports = {
 
     return this.isEqlist(s1, s2);
   },
-
+  
   isEqlist(l1, l2) {
+    if (this.isAtom(l1) || this.isAtom(l2)) {
+      throw new TypeError('The Law of isEqlist: isEqlist can only be used to compare two lists.');
+    }
+
     if (this.isNull(l1) && this.isNull(l2)) {
       return true;
     }
@@ -404,68 +420,39 @@ module.exports = {
       return that.cons(parens(convert(first)), convert(rest));
     }
 
-    function specailSymbols(a) {
-      if (a === '\n') {
-        return '#n';
-      }
-
-      if (a === true) {
-        return '#t';
-      }
-
-      if (a === false) {
-        return '#f';
-      }
-
-      if (a === null) {
-        return '#null';
-      }
-
-      if (a === undefined) {
-        return '#undefined';
-      }
-
-      if (a === Infinity) {
-        return '#Infinity';
-      }
-
-      if (Number.isNaN(a)) {
-        return '#NaN';
-      }
-
-      return a;
-    }
-
-    function replaceSpecialSymbols(s) {
-      if (that.isAtom(s)) {
-        const converted = specailSymbols(s);
-
-        // Changes numbers back to string if given an atom.
-        // Otherwise numbers are coerced to strings by join() further below
-        if (typeof converted === 'number') {
-          return converted.toString();
-        }
-
-        return converted;
-      }
-
-      if (that.isNull(s)) {
-        return s;
-      }
-
-      const first = that.car(s);
-      const rest = that.cdr(s);
-
-      if (that.isAtom(first)) {
-        return that.cons(specailSymbols(first), replaceSpecialSymbols(rest));
-      }
-
-      return that.cons(replaceSpecialSymbols(first), replaceSpecialSymbols(rest));
-    }
-
     function format(output) {
       if (that.isList(output)) {
-        const replaced = replaceSpecialSymbols(output);
+        const replaced = output.map((a) => {
+          if (a === '\n') {
+            return '#n';
+          }
+
+          if (a === true) {
+            return '#t';
+          }
+
+          if (a === false) {
+            return '#f';
+          }
+
+          if (a === null) {
+            return '#null';
+          }
+
+          if (a === undefined) {
+            return '#undefined';
+          }
+
+          if (a === Infinity) {
+            return '#Infinity';
+          }
+
+          if (Number.isNaN(a)) {
+            return '#NaN';
+          }
+
+          return a;
+        });
 
         const closed = parens(replaced);
 
@@ -473,7 +460,7 @@ module.exports = {
           .replace(/,/g, ' ');
       }
 
-      return replaceSpecialSymbols(output);
+      return output;
     }
 
     return format(convert(exp));
