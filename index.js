@@ -78,8 +78,12 @@ module.exports = {
       .replace(/([^,()]+),/g, '"$1",')
       // unwrap numbers from double quotes
       .replace(/"(\d+\.?\d*|\.\d+)"/g, '$1')
+      // unwrwap objects from double quotes
+      .replace(/"{/g, '{')
+      .replace(/}"/g, '}')
+      // .replace(/,,,/g, ',')
       // handle grammatical commas
-      .replace(/,,/g, ',","')
+      // .replace(/,,/g, ',","')
       // handle grammatical periods
       .replace(/,([.]+),/g, ',"$1",')
       // handle grammatical double quotes
@@ -435,7 +439,7 @@ module.exports = {
     function replaceSpecialSymbols(s) {
       if (that.isAtom(s)) {
         const converted = specailSymbols(s);
-        
+
         // Changes numbers back to string if given an atom.
         // Otherwise numbers are coerced to strings by join() further below
         if (typeof converted === 'number') {
