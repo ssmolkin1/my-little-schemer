@@ -8,9 +8,20 @@ module.exports = {
       '#Infinity': Infinity,
       '#null': null,
       '#undefined': undefined,
+      '#{': '{',
+      '#}': '}',
+      '#[': '[',
+      '#]': ']',
+      '#"#': '"',
     },
 
     defined: {},
+  },
+
+  formatText(txt) {
+    return txt.slice()
+      .replace(/\s"\s/g, ' #\\"# ')
+      .replace(/,/g, '#,#');
   },
 
   jSExpression(string) {
@@ -40,16 +51,15 @@ module.exports = {
       .replace(/([^,()]+),/g, '"$1",')
       // unwrap numbers from double quotes, except those which are object keys
       .replace(/"(\d+\.?\d*|\.\d+)"([^:])/g, '$1$2')
+      // handle double double quotes
+      .replace(/""([^"]*)""/g, '"\\"$1\\""')
       // handles JSON objects
       .replace(/([\]}])"/g, '$1')
       .replace(/"([\[{])/g, '$1')
       .replace(/"?,,,"?/g, ',')
-      // handle grammatical commas
-      // .replace(/,,/g, ',","')
+      .replace(/\\,\\"/g, ',')
       // handle grammatical periods
       .replace(/,([.]+),/g, ',"$1",')
-      // handle grammatical double quotes
-      .replace(/"""/g, '"\\""')
       // add leading zero to decimal numbers, like '.5' (required to parse JSON)
       .replace(/(,)(\.)/g, '$10$2')
       // remove unecessary decimal point from integers, like '5.' (required to parse  JSON)
@@ -72,6 +82,11 @@ module.exports = {
         return prim[a];
       }
 
+      // handle commas
+      if (a.toString().slice(-3) === '#,#') {
+        return `${a.toString().slice(0, -3)},`;
+      }
+
       return a;
     }
 
@@ -84,6 +99,7 @@ module.exports = {
       const rest = that.cdr(l);
 
       if (that.isAtom(first)) {
+        // handles attached commas
         return that.cons(specailSymbols(first), replaceSpecialSymbols(rest));
       }
 
