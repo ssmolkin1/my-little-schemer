@@ -141,6 +141,15 @@ module.exports = {
 
   sExpression(exp) {
     const that = this;
+    const revSymEnts = {};
+    const revSymVals = {};
+
+    const sse = Object.entries(this.SPEC_SYM);
+
+    sse.forEach((ent) => {
+      revSymEnts[ent[0]] = Object.entries(ent[1]);
+      revSymVals[ent[0]] = Object.values(ent[1]);      
+    });
 
     function parens(a) {
       return that.cons(['('], that.cons(a, [')']));
@@ -161,47 +170,81 @@ module.exports = {
       return that.cons(parens(convert(first)), convert(rest));
     }
 
+    function specailSymbols(a) {
+      const def = revSymEnts.defined;
+      const defI = revSymVals.defined.indexOf(a);
+
+      if (defI > -1) {
+        return def[defI][0];
+      }
+
+      const prim = revSymEnts.primitive;
+      const primI = revSymVals.primitive.indexOf(a);
+
+      if (primI > -1) {
+        return prim[primI][0];
+      }
+
+      if (that.isObject(a)) {
+        replaceSpecialSymbols(a);
+        return JSON.stringify(a);
+      }
+
+      return a;
+    }
+
+    function replaceSpecialSymbols(l) {
+      if (that.isObject(l)) {
+        replaceObjSym(l);
+        return l;
+      }
+      
+      if (that.isAtom(l)) {
+        return specailSymbols(l);
+      }
+
+      if (that.isNull(l)) {
+        return l;
+      }
+
+      const first = that.car(l);
+      const rest = that.cdr(l);
+
+      if (that.isObject(first)) {
+        replaceObjSym(first);
+        return that.cons(first, replaceSpecialSymbols(rest));
+      }
+
+      if (that.isAtom(first)) {
+        return that.cons(specailSymbols(first), replaceSpecialSymbols(rest));
+      }
+
+      return that.cons(replaceSpecialSymbols(first), replaceSpecialSymbols(rest));
+    }
+
+    function replaceObjSym(obj) {
+      Object.entries(obj).forEach((ent) => {
+        const key = ent[0];
+        const val = ent[1];
+
+        if (that.isObject(val)) {
+          replaceObjSym(val);
+        }
+
+        obj[key] = replaceSpecialSymbols(val);
+      });
+    }
+
     function format(output) {
-      if (that.isList(output)) {
-        const replaced = output.map((a) => {
-          if (a === '\n') {
-            return '#n';
-          }
+      const replaced = replaceSpecialSymbols(output);
 
-          if (a === true) {
-            return '#t';
-          }
-
-          if (a === false) {
-            return '#f';
-          }
-
-          if (a === null) {
-            return '#null';
-          }
-
-          if (a === undefined) {
-            return '#undefined';
-          }
-
-          if (a === Infinity) {
-            return '#Infinity';
-          }
-
-          if (Number.isNaN(a)) {
-            return '#NaN';
-          }
-
-          return a;
-        });
-
+      if (that.isList(replaced)) {
         const closed = parens(replaced);
-
         return closed.join()
           .replace(/,/g, ' ');
       }
 
-      return output;
+      return replaced;
     }
 
     return format(convert(exp));
