@@ -151,6 +151,9 @@ module.exports = {
       revSymVals[ent[0]] = Object.values(ent[1]);      
     });
 
+    const def = revSymEnts.defined;
+    const prim = revSymEnts.primitive;
+
     function parens(a) {
       return that.cons(['('], that.cons(a, [')']));
     }
@@ -171,14 +174,12 @@ module.exports = {
     }
 
     function specailSymbols(a) {
-      const def = revSymEnts.defined;
       const defI = revSymVals.defined.indexOf(a);
 
       if (defI > -1) {
         return def[defI][0];
       }
 
-      const prim = revSymEnts.primitive;
       const primI = revSymVals.primitive.indexOf(a);
 
       if (primI > -1) {
@@ -186,8 +187,9 @@ module.exports = {
       }
 
       if (that.isObject(a)) {
-        replaceSpecialSymbols(a);
-        return JSON.stringify(a);
+        const copy = Object.assign({}, a);
+        replaceSpecialSymbols(copy);
+        return JSON.stringify(copy);
       }
 
       return a;
@@ -195,10 +197,11 @@ module.exports = {
 
     function replaceSpecialSymbols(l) {
       if (that.isObject(l)) {
-        replaceObjSym(l);
-        return l;
+        const copy = Object.assign({}, l);
+        replaceObjSym(copy);
+        return JSON.stringify(copy);
       }
-      
+
       if (that.isAtom(l)) {
         return specailSymbols(l);
       }
@@ -211,8 +214,9 @@ module.exports = {
       const rest = that.cdr(l);
 
       if (that.isObject(first)) {
-        replaceObjSym(first);
-        return that.cons(first, replaceSpecialSymbols(rest));
+        const copy = Object.assign({}, first);
+        replaceObjSym(copy);
+        return that.cons(JSON.stringify(copy), replaceSpecialSymbols(rest));
       }
 
       if (that.isAtom(first)) {
@@ -244,7 +248,7 @@ module.exports = {
           .replace(/,/g, ' ');
       }
 
-      return replaced;
+      return replaced.toString();
     }
 
     return format(convert(exp));
