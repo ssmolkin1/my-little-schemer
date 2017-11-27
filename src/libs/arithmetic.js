@@ -1,6 +1,8 @@
+const s = require('../../index');
+
 module.exports = {
   '+': function (n, m) {
-    if (!this.isNumber(n) || !this.isNumber(m)) {
+    if (!s.isNumber(n) || !s.isNumber(m)) {
       throw new TypeError('Arithmetic operations can only be done on numbers.');
     }
 
@@ -8,7 +10,7 @@ module.exports = {
   },
 
   '-': function (n, m) {
-    if (!this.isNumber(n) || !this.isNumber(m)) {
+    if (!s.isNumber(n) || !s.isNumber(m)) {
       throw new TypeError('Arithmetic operations can only be done on numbers.');
     }
 
@@ -16,7 +18,7 @@ module.exports = {
   },
 
   '*': function (n, m) {
-    if (!this.isNumber(n) || !this.isNumber(m)) {
+    if (!s.isNumber(n) || !s.isNumber(m)) {
       throw new TypeError('Arithmetic operations can only be done on numbers.');
     }
 
@@ -24,7 +26,7 @@ module.exports = {
   },
 
   '/': function (n, m) {
-    if (!this.isNumber(n) || !this.isNumber(m)) {
+    if (!s.isNumber(n) || !s.isNumber(m)) {
       throw new TypeError('Arithmetic operations can only be done on numbers.');
     }
 
@@ -32,7 +34,7 @@ module.exports = {
   },
 
   '%': function (n, m) {
-    if (!this.isNumber(n) || !this.isNumber(m)) {
+    if (!s.isNumber(n) || !s.isNumber(m)) {
       throw new TypeError('Arithmetic operations can only be done on numbers.');
     }
 

@@ -8,20 +8,9 @@ module.exports = {
       '#Infinity': Infinity,
       '#null': null,
       '#undefined': undefined,
-      '#{': '{',
-      '#}': '}',
-      '#[': '[',
-      '#]': ']',
-      '#"#': '"',
     },
 
     defined: {},
-  },
-
-  formatText(txt) {
-    return txt.slice()
-      .replace(/\s"\s/g, ' #\\"# ')
-      .replace(/,/g, '#,#');
   },
 
   jSExpression(string) {
@@ -29,8 +18,14 @@ module.exports = {
       throw new Error('The argument must be a string');
     }
 
+    function formatText(txt) {
+      return txt.slice()
+        .replace(/"/g, '#\\"#')
+        .replace(/[{}[\],]/g, '#$&#');
+    }
+
     const that = this;
-    let exp = `(${string.slice(0)})`; // clone string wrap string in outer parens (valid expressions must be wrapped in outer parens)
+    let exp = `(${formatText(string.slice(0))})`; // clone string wrap string in outer parens (valid expressions must be wrapped in outer parens)
 
     exp = JSON.parse(exp
       // split string on spaces, parens and commas (the last one to avoid errors)
@@ -82,15 +77,33 @@ module.exports = {
         return prim[a];
       }
 
-      // handle commas
-      if (a.toString().slice(-3) === '#,#') {
-        return `${a.toString().slice(0, -3)},`;
+      if (typeof a === 'string') {
+        // handles commas, double quotes and brackets
+        const reformatted = a.slice()
+          .replace(/#([{}[\],])#/g, '$1')
+          .replace(/#"#/g, '"');
+
+        // turn to JSON
+        if (/(^{.*}$)|(^\[.*\]$)/.test(reformatted)) {
+          return replaceSpecialSymbols(JSON.parse(reformatted));
+        }
+
+        return reformatted;
       }
 
       return a;
     }
 
     function replaceSpecialSymbols(l) {
+      if (that.isObject(l)) {
+        replaceObjSym(l);
+        return l;
+      }
+      
+      if (that.isAtom(l)) {
+        return specailSymbols(l);
+      }
+
       if (that.isNull(l)) {
         return l;
       }
@@ -98,12 +111,29 @@ module.exports = {
       const first = that.car(l);
       const rest = that.cdr(l);
 
+      if (that.isObject(first)) {
+        replaceObjSym(first);
+        return that.cons(first, replaceSpecialSymbols(rest));
+      }
+
       if (that.isAtom(first)) {
-        // handles attached commas
         return that.cons(specailSymbols(first), replaceSpecialSymbols(rest));
       }
 
       return that.cons(replaceSpecialSymbols(first), replaceSpecialSymbols(rest));
+    }
+
+    function replaceObjSym(obj) {
+      Object.entries(obj).forEach((ent) => {
+        const key = ent[0];
+        const val = ent[1];
+
+        if (that.isObject(val)) {
+          replaceObjSym(val);
+        }
+
+        obj[key] = replaceSpecialSymbols(val);
+      });
     }
 
     return this.car(replaceSpecialSymbols(exp));

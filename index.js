@@ -5,5 +5,6 @@ const equals = require('./src/prim/equals');
 const ops = require('./src/prim/ops');
 const logical = require('./src/prim/logical');
 const lambda = require('./src/prim/lambda');
+const utils = require('./src/utils');
 
-module.exports = Object.assign(evaluate, parsers, types, equals, ops, logical, lambda);
+module.exports = Object.assign(evaluate, parsers, types, equals, ops, logical, lambda, utils);

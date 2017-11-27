@@ -4,7 +4,7 @@ module.exports = {
       throw new TypeError('The Law of isEqobj: isEqobj can only be used to compare two objects.');
     }
 
-    return this.isEqlist(Object.values(o1), Object.values(o2));
+    return this.isEqlist(Object.entries(o1), Object.entries(o2));
   },
 
   isEqan(a1, a2) {
