@@ -1,5 +1,9 @@
-function loadTo (s) {
+function loadTo(s) {
   s.SPEC_SYM = {
+    // Choose which symbol libraries to use
+    IN_USE: [],
+    // Choose whether to use user-defined symbols
+    USE_DEFINED: true,
     primitive: {
       '#t': true,
       '#f': false,
@@ -11,6 +15,20 @@ function loadTo (s) {
     },
 
     defined: {},
+  };
+
+  // Deep replace objects
+  s.replaceObjVal = (obj, replacer) => {
+    Object.entries(obj).forEach((ent) => {
+      const key = ent[0];
+      const val = ent[1];
+
+      if (s.isObject(val)) {
+        s.replaceObjVal(val);
+      }
+
+      obj[key] = replacer(val);
+    });
   };
 
   s.jSExpression = (string) => {
@@ -93,25 +111,25 @@ function loadTo (s) {
       return a;
     }
 
-    function replaceSpecialSymbols(l) {
-      if (s.isObject(l)) {
-        replaceObjSym(l);
-        return l;
-      }
-      
-      if (s.isAtom(l)) {
-        return specailSymbols(l);
+    function replaceSpecialSymbols(sExp) {
+      if (s.isObject(sExp)) {
+        s.replaceObjVal(sExp, replaceSpecialSymbols);
+        return sExp;
       }
 
-      if (s.isNull(l)) {
-        return l;
+      if (s.isAtom(sExp)) {
+        return specailSymbols(sExp);
       }
 
-      const first = s.car(l);
-      const rest = s.cdr(l);
+      if (s.isNull(sExp)) {
+        return sExp;
+      }
+
+      const first = s.car(sExp);
+      const rest = s.cdr(sExp);
 
       if (s.isObject(first)) {
-        replaceObjSym(first);
+        s.replaceObjVal(first, replaceSpecialSymbols);
         return s.cons(first, replaceSpecialSymbols(rest));
       }
 
@@ -120,19 +138,6 @@ function loadTo (s) {
       }
 
       return s.cons(replaceSpecialSymbols(first), replaceSpecialSymbols(rest));
-    }
-
-    function replaceObjSym(obj) {
-      Object.entries(obj).forEach((ent) => {
-        const key = ent[0];
-        const val = ent[1];
-
-        if (s.isObject(val)) {
-          replaceObjSym(val);
-        }
-
-        obj[key] = replaceSpecialSymbols(val);
-      });
     }
 
     return s.car(replaceSpecialSymbols(exp));
@@ -193,27 +198,27 @@ function loadTo (s) {
       return a;
     }
 
-    function replaceSpecialSymbols(l) {
-      if (s.isObject(l)) {
-        const copy = Object.assign({}, l);
-        replaceObjSym(copy);
+    function replaceSpecialSymbols(jSExp) {
+      if (s.isObject(jSExp)) {
+        const copy = Object.assign({}, jSExp);
+        s.replaceObjVal(copy, replaceSpecialSymbols);
         return JSON.stringify(copy);
       }
 
-      if (s.isAtom(l)) {
-        return specailSymbols(l);
+      if (s.isAtom(jSExp)) {
+        return specailSymbols(jSExp);
       }
 
-      if (s.isNull(l)) {
-        return l;
+      if (s.isNull(jSExp)) {
+        return jSExp;
       }
 
-      const first = s.car(l);
-      const rest = s.cdr(l);
+      const first = s.car(jSExp);
+      const rest = s.cdr(jSExp);
 
       if (s.isObject(first)) {
         const copy = Object.assign({}, first);
-        replaceObjSym(copy);
+        s.replaceObjVal(copy, replaceSpecialSymbols);
         return s.cons(JSON.stringify(copy), replaceSpecialSymbols(rest));
       }
 
@@ -222,19 +227,6 @@ function loadTo (s) {
       }
 
       return s.cons(replaceSpecialSymbols(first), replaceSpecialSymbols(rest));
-    }
-
-    function replaceObjSym(obj) {
-      Object.entries(obj).forEach((ent) => {
-        const key = ent[0];
-        const val = ent[1];
-
-        if (s.isObject(val)) {
-          replaceObjSym(val);
-        }
-
-        obj[key] = replaceSpecialSymbols(val);
-      });
     }
 
     function format(output) {

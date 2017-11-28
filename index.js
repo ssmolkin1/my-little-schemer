@@ -1,5 +1,6 @@
 const s = {};
 
+// loadTo interface allows circular reference without using 'this'
 require('./src/evaluate').loadTo(s);
 require('./src/parsers').loadTo(s);
 require('./src/prim/types').loadTo(s);

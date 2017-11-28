@@ -1,19 +1,11 @@
 function loadTo(s) {
-  s.isList = (exp) => {
-    return Array.isArray(exp);
-  };
+  s.isList = exp => Array.isArray(exp);
 
-  s.isAtom = (exp) => {
-    return !s.isList(exp);
-  };
+  s.isAtom = exp => !s.isList(exp);
 
-  s.isObject = (a) => {
-    return s.isAtom(a) && (typeof a === 'object')
-  };
+  s.isObject = a => s.isAtom(a) && (typeof a === 'object');
 
-  s.isNumber = (exp) => {
-    return !Number.isNaN(exp) && typeof exp === 'number';
-  };
+  s.isNumber = exp => !Number.isNaN(exp) && typeof exp === 'number';
 
   s.isNull = (l) => {
     if (s.isAtom(l)) {
@@ -22,9 +14,7 @@ function loadTo(s) {
     return l.length === 0;
   };
 
-  s.isFunction = (name) => {
-    return s.isDefined(name) ? typeof s[name] === 'function' : typeof name === 'function';
-  };
+  s.isFunction = name => typeof s.getDefinition(name) === 'function';
 
   s.isZero = (n) => {
     if (!s.isNumber(n)) {
