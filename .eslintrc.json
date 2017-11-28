@@ -6,6 +6,8 @@
             {"devDependencies": true}
         ],
 
-        "no-console": ["error", { "allow" : ["warn", "error"] }]
+        "no-console": ["error", { "allow" : ["warn", "error"] }],
+        
+        "no-param-reassign": ["error", { "props": false }]
     }
 }

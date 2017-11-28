@@ -1,36 +1,38 @@
-module.exports = {
-  isList(exp) {
+function loadTo(s) {
+  s.isList = (exp) => {
     return Array.isArray(exp);
-  },
+  };
 
-  isAtom(exp) {
-    return !this.isList(exp);
-  },
+  s.isAtom = (exp) => {
+    return !s.isList(exp);
+  };
 
-  isObject(a) {
-    return this.isAtom(a) && (typeof a === 'object')
-  },
+  s.isObject = (a) => {
+    return s.isAtom(a) && (typeof a === 'object')
+  };
 
-  isNumber(exp) {
+  s.isNumber = (exp) => {
     return !Number.isNaN(exp) && typeof exp === 'number';
-  },
+  };
 
-  isNull(l) {
-    if (this.isAtom(l)) {
+  s.isNull = (l) => {
+    if (s.isAtom(l)) {
       throw new TypeError('The Law of isNull: You can only ask isNull of a list.');
     }
     return l.length === 0;
-  },
+  };
 
-  isFunction(name) {
-    return this.isDefined(name) ? typeof this[name] === 'function' : typeof name === 'function';
-  },
+  s.isFunction = (name) => {
+    return s.isDefined(name) ? typeof s[name] === 'function' : typeof name === 'function';
+  };
 
-  isZero(n) {
-    if (!this.isNumber(n)) {
+  s.isZero = (n) => {
+    if (!s.isNumber(n)) {
       throw new TypeError('The Law of isZero: The argument of isZero must be a number.');
     }
 
     return n === 0;
-  },
-};
+  };
+}
+
+module.exports = { loadTo };

@@ -1,53 +1,55 @@
-module.exports = {
-  isEqobj(o1, o2) {
-    if (!this.isObject(o1) || !this.isObject(o2)) {
+function loadTo(s) {
+  s.isEqobj = (o1, o2) => {
+    if (!s.isObject(o1) || !s.isObject(o2)) {
       throw new TypeError('The Law of isEqobj: isEqobj can only be used to compare two objects.');
     }
 
-    return this.isEqlist(Object.entries(o1), Object.entries(o2));
-  },
+    return s.isEqlist(Object.entries(o1), Object.entries(o2));
+  };
 
-  isEqan(a1, a2) {
-    if (this.isList(a1) || this.isList(a2)) {
+  s.isEqan = (a1, a2) => {
+    if (s.isList(a1) || s.isList(a2)) {
       throw new TypeError('The Law of isEqan: isEqan can only be used to compare two atoms.');
     }
 
-    if (this.isObject(a1) && this.isObject(a2)) {
-      return this.isEqobj(a1, a2);
+    if (s.isObject(a1) && s.isObject(a2)) {
+      return s.isEqobj(a1, a2);
     }
 
-    if (this.isObject(a1) || this.isObject(a2)) {
+    if (s.isObject(a1) || s.isObject(a2)) {
       return false;
     }
 
     return a1 === a2;
-  },
+  };
 
-  isEqual(s1, s2) {
-    if (this.isAtom(s1) && this.isAtom(s2)) {
-      return this.isEqan(s1, s2);
+  s.isEqual = (s1, s2) => {
+    if (s.isAtom(s1) && s.isAtom(s2)) {
+      return s.isEqan(s1, s2);
     }
 
-    if (this.isAtom(s1) || this.isAtom(s2)) {
+    if (s.isAtom(s1) || s.isAtom(s2)) {
       return false;
     }
 
-    return this.isEqlist(s1, s2);
-  },
+    return s.isEqlist(s1, s2);
+  };
 
-  isEqlist(l1, l2) {
-    if (this.isAtom(l1) || this.isAtom(l2)) {
+  s.isEqlist = (l1, l2) => {
+    if (s.isAtom(l1) || s.isAtom(l2)) {
       throw new TypeError('The Law of isEqlist: isEqlist can only be used to compare two lists.');
     }
 
-    if (this.isNull(l1) && this.isNull(l2)) {
+    if (s.isNull(l1) && s.isNull(l2)) {
       return true;
     }
 
-    if (this.isNull(l1) || this.isNull(l2)) {
+    if (s.isNull(l1) || s.isNull(l2)) {
       return false;
     }
 
-    return this.isEqual(this.car(l1), this.car(l2)) && this.isEqual(this.cdr(l1), this.cdr(l2));
-  },
-};
+    return s.isEqual(s.car(l1), s.car(l2)) && s.isEqual(s.cdr(l1), s.cdr(l2));
+  };
+}
+
+module.exports = { loadTo };

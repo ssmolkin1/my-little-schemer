@@ -1,10 +1,12 @@
-const evaluate = require('./src/evaluate');
-const parsers = require('./src/parsers');
-const types = require('./src/prim/types');
-const equals = require('./src/prim/equals');
-const ops = require('./src/prim/ops');
-const logical = require('./src/prim/logical');
-const lambda = require('./src/prim/lambda');
-const utils = require('./src/utils');
+const s = {};
 
-module.exports = Object.assign(evaluate, parsers, types, equals, ops, logical, lambda, utils);
+require('./src/evaluate').loadTo(s);
+require('./src/parsers').loadTo(s);
+require('./src/prim/types').loadTo(s);
+require('./src/prim/equals').loadTo(s);
+require('./src/prim/ops').loadTo(s);
+require('./src/prim/logical').loadTo(s);
+require('./src/prim/lambda').loadTo(s);
+require('./src/utils').loadTo(s);
+
+module.exports = s;

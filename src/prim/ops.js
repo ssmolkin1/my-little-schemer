@@ -1,22 +1,22 @@
-module.exports = {
-  car(l) {
-    if (this.isAtom(l) || this.isNull(l)) {
+function loadTo(s) {
+  s.car = (l) => {
+    if (s.isAtom(l) || s.isNull(l)) {
       throw new TypeError('The Law of Car: You can only take the car of a non-empty list.');
     }
 
     return l[0];
-  },
+  };
 
-  cdr(l) {
-    if (this.isAtom(l) || this.isNull(l)) {
+  s.cdr = (l) => {
+    if (s.isAtom(l) || s.isNull(l)) {
       throw new TypeError('The Law of Cdr: You can only take the cdr of a non-empty list.');
     }
 
     return l.slice(1);
-  },
+  };
 
-  cons(exp, l) {
-    if (this.isAtom(l)) {
+  s.cons = (exp, l) => {
+    if (s.isAtom(l)) {
       throw new TypeError('The Law of Cons: The second argument must be a list.');
     }
 
@@ -25,37 +25,39 @@ module.exports = {
     n.unshift(exp);
 
     return n;
-  },
+  };
 
-  quote(exp) {
+  s.quote = (exp) => {
     return exp;
-  },
+  };
 
-  add1(n) {
-    if (!this.isNumber(n)) {
+  s.add1 = (n) => {
+    if (!s.isNumber(n)) {
       throw new TypeError('Arithmetic operations can only be done on numbers.');
     }
 
     return n + 1;
-  },
+  };
 
-  sub1(n) {
-    if (!this.isNumber(n)) {
+  s.sub1 = (n) => {
+    if (!s.isNumber(n)) {
       throw new TypeError('Arithmetic operations can only be done on numbers.');
     }
 
     return n - 1;
-  },
+  };
 
-  define(name, exp) {
-    if (!this.isAtom(name)) {
+  s.define = (name, exp) => {
+    if (!s.isAtom(name)) {
       throw new Error('The Law of Define: The first argument must be an atom.');
     }
 
-    this[name] = this.value(exp);
-  },
+    s[name] = s.value(exp);
+  };
 
-  undefine(name) {
-    delete this[name];
-  },
-};
+  s.undefine = (name) => {
+    delete s[name];
+  };
+}
+
+module.exports = { loadTo };

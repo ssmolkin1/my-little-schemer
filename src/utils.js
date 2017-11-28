@@ -1,5 +1,5 @@
-module.exports = {
-  caller(lda) {
-    return (...args) => lda.call(this, ...args);
-  },
-};
+function loadTo(s) {
+  s.caller = lda => (...args) => lda.call(this, ...args);
+}
+
+module.exports = { loadTo };

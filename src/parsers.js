@@ -1,5 +1,5 @@
-module.exports = {
-  SPEC_SYM: {
+function loadTo (s) {
+  s.SPEC_SYM = {
     primitive: {
       '#t': true,
       '#f': false,
@@ -11,9 +11,9 @@ module.exports = {
     },
 
     defined: {},
-  },
+  };
 
-  jSExpression(string) {
+  s.jSExpression = (string) => {
     if (typeof string !== 'string') {
       throw new Error('The argument must be a string');
     }
@@ -24,7 +24,6 @@ module.exports = {
         .replace(/[{}[\],]/g, '#$&#');
     }
 
-    const that = this;
     let exp = `(${formatText(string.slice(0))})`; // clone string wrap string in outer parens (valid expressions must be wrapped in outer parens)
 
     exp = JSON.parse(exp
@@ -65,13 +64,13 @@ module.exports = {
       .replace(/,?\)/g, ']'));
 
     function specailSymbols(a) {
-      const def = that.SPEC_SYM.defined;
+      const def = s.SPEC_SYM.defined;
 
       if (Object.prototype.hasOwnProperty.call(def, a)) {
         return def[a];
       }
 
-      const prim = that.SPEC_SYM.primitive;
+      const prim = s.SPEC_SYM.primitive;
 
       if (Object.prototype.hasOwnProperty.call(prim, a)) {
         return prim[a];
@@ -95,32 +94,32 @@ module.exports = {
     }
 
     function replaceSpecialSymbols(l) {
-      if (that.isObject(l)) {
+      if (s.isObject(l)) {
         replaceObjSym(l);
         return l;
       }
       
-      if (that.isAtom(l)) {
+      if (s.isAtom(l)) {
         return specailSymbols(l);
       }
 
-      if (that.isNull(l)) {
+      if (s.isNull(l)) {
         return l;
       }
 
-      const first = that.car(l);
-      const rest = that.cdr(l);
+      const first = s.car(l);
+      const rest = s.cdr(l);
 
-      if (that.isObject(first)) {
+      if (s.isObject(first)) {
         replaceObjSym(first);
-        return that.cons(first, replaceSpecialSymbols(rest));
+        return s.cons(first, replaceSpecialSymbols(rest));
       }
 
-      if (that.isAtom(first)) {
-        return that.cons(specailSymbols(first), replaceSpecialSymbols(rest));
+      if (s.isAtom(first)) {
+        return s.cons(specailSymbols(first), replaceSpecialSymbols(rest));
       }
 
-      return that.cons(replaceSpecialSymbols(first), replaceSpecialSymbols(rest));
+      return s.cons(replaceSpecialSymbols(first), replaceSpecialSymbols(rest));
     }
 
     function replaceObjSym(obj) {
@@ -128,7 +127,7 @@ module.exports = {
         const key = ent[0];
         const val = ent[1];
 
-        if (that.isObject(val)) {
+        if (s.isObject(val)) {
           replaceObjSym(val);
         }
 
@@ -136,15 +135,14 @@ module.exports = {
       });
     }
 
-    return this.car(replaceSpecialSymbols(exp));
-  },
+    return s.car(replaceSpecialSymbols(exp));
+  };
 
-  sExpression(exp) {
-    const that = this;
+  s.sExpression = (exp) => {
     const revSymEnts = {};
     const revSymVals = {};
 
-    const sse = Object.entries(this.SPEC_SYM);
+    const sse = Object.entries(s.SPEC_SYM);
 
     sse.forEach((ent) => {
       revSymEnts[ent[0]] = Object.entries(ent[1]);
@@ -155,22 +153,22 @@ module.exports = {
     const prim = revSymEnts.primitive;
 
     function parens(a) {
-      return that.cons(['('], that.cons(a, [')']));
+      return s.cons(['('], s.cons(a, [')']));
     }
 
     function convert(input) {
-      if (that.isAtom(input) || that.isNull(input)) {
+      if (s.isAtom(input) || s.isNull(input)) {
         return input;
       }
 
-      const first = that.car(input);
-      const rest = that.cdr(input);
+      const first = s.car(input);
+      const rest = s.cdr(input);
 
-      if (that.isAtom(first)) {
-        return that.cons(first, convert(rest));
+      if (s.isAtom(first)) {
+        return s.cons(first, convert(rest));
       }
 
-      return that.cons(parens(convert(first)), convert(rest));
+      return s.cons(parens(convert(first)), convert(rest));
     }
 
     function specailSymbols(a) {
@@ -186,7 +184,7 @@ module.exports = {
         return prim[primI][0];
       }
 
-      if (that.isObject(a)) {
+      if (s.isObject(a)) {
         const copy = Object.assign({}, a);
         replaceSpecialSymbols(copy);
         return JSON.stringify(copy);
@@ -196,34 +194,34 @@ module.exports = {
     }
 
     function replaceSpecialSymbols(l) {
-      if (that.isObject(l)) {
+      if (s.isObject(l)) {
         const copy = Object.assign({}, l);
         replaceObjSym(copy);
         return JSON.stringify(copy);
       }
 
-      if (that.isAtom(l)) {
+      if (s.isAtom(l)) {
         return specailSymbols(l);
       }
 
-      if (that.isNull(l)) {
+      if (s.isNull(l)) {
         return l;
       }
 
-      const first = that.car(l);
-      const rest = that.cdr(l);
+      const first = s.car(l);
+      const rest = s.cdr(l);
 
-      if (that.isObject(first)) {
+      if (s.isObject(first)) {
         const copy = Object.assign({}, first);
         replaceObjSym(copy);
-        return that.cons(JSON.stringify(copy), replaceSpecialSymbols(rest));
+        return s.cons(JSON.stringify(copy), replaceSpecialSymbols(rest));
       }
 
-      if (that.isAtom(first)) {
-        return that.cons(specailSymbols(first), replaceSpecialSymbols(rest));
+      if (s.isAtom(first)) {
+        return s.cons(specailSymbols(first), replaceSpecialSymbols(rest));
       }
 
-      return that.cons(replaceSpecialSymbols(first), replaceSpecialSymbols(rest));
+      return s.cons(replaceSpecialSymbols(first), replaceSpecialSymbols(rest));
     }
 
     function replaceObjSym(obj) {
@@ -231,7 +229,7 @@ module.exports = {
         const key = ent[0];
         const val = ent[1];
 
-        if (that.isObject(val)) {
+        if (s.isObject(val)) {
           replaceObjSym(val);
         }
 
@@ -242,7 +240,7 @@ module.exports = {
     function format(output) {
       const replaced = replaceSpecialSymbols(output);
 
-      if (that.isList(replaced)) {
+      if (s.isList(replaced)) {
         const closed = parens(replaced);
         return closed.join()
           .replace(/,/g, ' ');
@@ -252,5 +250,7 @@ module.exports = {
     }
 
     return format(convert(exp));
-  },
-};
+  };
+}
+
+module.exports = { loadTo };

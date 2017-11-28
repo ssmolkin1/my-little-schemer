@@ -1,43 +1,45 @@
-module.exports = {
-  isDefined(name) {
-    return Object.prototype.hasOwnProperty.call(this, name);
-  },
+function loadTo(s) {
+  s.LIBS = {};
 
-  value(exp) {
-    if (this.isAtom(exp) || this.isNull(exp)) {
-      if (this.isDefined(exp)) {
-        return this.value(this[exp]);
+  s.isDefined = (name) => {
+    return Object.prototype.hasOwnProperty.call(s, name);
+  };
+
+  s.value = (exp) => {
+    if (s.isAtom(exp) || s.isNull(exp)) {
+      if (s.isDefined(exp)) {
+        return s.value(s[exp]);
       }
 
       return exp;
     }
 
-    const first = this.car(exp);
-    const rest = this.cdr(exp);
+    const first = s.car(exp);
+    const rest = s.cdr(exp);
 
-    if (this.isFunction(first)) {
+    if (s.isFunction(first)) {
       if (first === 'lambda' || first === 'define') {
-        return this[first](...rest);
+        return s[first](...rest);
       }
 
       // Evaluation control needs to be handed off specially to these functions
       if (first === 'cond' || first === '||' || first === '&&' || first === 'quote' ||
-        first === this.cond || first === this['||'] || first === this['&&'] || first === this.quote) {
-        return this.isDefined(first) ? this[first](rest) : first(rest);
+        first === s.cond || first === s['||'] || first === s['&&'] || first === s.quote) {
+        return s.isDefined(first) ? s[first](rest) : first(rest);
       }
 
-      return this.isDefined(first) ? this[first](...this.value(rest)) : first(...this.value(rest));
+      return s.isDefined(first) ? s[first](...s.value(rest)) : first(...s.value(rest));
     }
 
-    return this.cons(this.value(first), this.value(rest));
-  },
+    return s.cons(s.value(first), s.value(rest));
+  };
 
-  evaluate(scheme, js = false, final = false, convert = false) {
+  s.evaluate = (scheme, js = false, final = false, convert = false) => {
     let input;
 
     // converts from scheme to JS if not already converted
     if (!js) {
-      input = this.jSExpression(scheme);
+      input = s.jSExpression(scheme);
     } else if (typeof scheme === 'number') {
       input = 0 + scheme;
     } else if (typeof scheme === 'boolean') {
@@ -47,18 +49,20 @@ module.exports = {
     }
 
     // evaluates the input
-    let output = this.value(input);
+    let output = s.value(input);
 
     // return only the final result if the option final is selected
-    if (final && this.isList(output)) {
+    if (final && s.isList(output)) {
       output = output[output.length - 1];
     }
 
     // converts the output back to scheme if option convert is selected
     if (convert) {
-      output = this.sExpression(output);
+      output = s.sExpression(output);
     }
 
     return output;
-  },
-};
+  };
+}
+
+module.exports = { loadTo };

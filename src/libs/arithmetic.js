@@ -1,43 +1,46 @@
-const s = require('../../index');
+function loadTo(s) {
+  s.LIBS.arithmetic = {};
+  const lib = s.LIBS.arithmetic;
 
-module.exports = {
-  '+': function (n, m) {
+  lib['+'] = (n, m) => {
     if (!s.isNumber(n) || !s.isNumber(m)) {
       throw new TypeError('Arithmetic operations can only be done on numbers.');
     }
 
     return n + m;
-  },
+  };
 
-  '-': function (n, m) {
+  lib['-'] = (n, m) => {
     if (!s.isNumber(n) || !s.isNumber(m)) {
       throw new TypeError('Arithmetic operations can only be done on numbers.');
     }
 
     return n - m;
-  },
+  };
 
-  '*': function (n, m) {
+  lib['*'] = (n, m) => {
     if (!s.isNumber(n) || !s.isNumber(m)) {
       throw new TypeError('Arithmetic operations can only be done on numbers.');
     }
 
     return n * m;
-  },
+  };
 
-  '/': function (n, m) {
+  lib['/'] = (n, m) => {
     if (!s.isNumber(n) || !s.isNumber(m)) {
       throw new TypeError('Arithmetic operations can only be done on numbers.');
     }
 
     return n / m;
-  },
+  };
 
-  '%': function (n, m) {
+  lib['%'] = (n, m) => {
     if (!s.isNumber(n) || !s.isNumber(m)) {
       throw new TypeError('Arithmetic operations can only be done on numbers.');
     }
 
     return n % m;
-  },
-};
+  };
+}
+
+module.exports = { loadTo };

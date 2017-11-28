@@ -1,32 +1,33 @@
-module.exports = {
-  lambda(args, func) {
-    const that = this;
+function loadTo(s) {
+  s.lambda = (args, func) => {
 
     function replace(list, matches, replacements) {
-      if (that.isNull(list)) {
+      if (s.isNull(list)) {
         return list;
       }
 
-      const first = that.car(list);
-      const rest = that.cdr(list);
+      const first = s.car(list);
+      const rest = s.cdr(list);
 
-      if (that.isAtom(first)) {
+      if (s.isAtom(first)) {
         const i = matches.indexOf(first);
 
         if (i > -1) {
-          return that.cons(replacements[i], replace(rest, matches, replacements));
+          return s.cons(replacements[i], replace(rest, matches, replacements));
         }
 
-        return that.cons(first, replace(rest, matches, replacements));
+        return s.cons(first, replace(rest, matches, replacements));
       }
 
-      return that.cons(replace(first, matches, replacements), replace(rest, matches, replacements));
+      return s.cons(replace(first, matches, replacements), replace(rest, matches, replacements));
     }
 
     function result(...argValues) {
-      return that.value(replace(func, args, argValues));
+      return s.value(replace(func, args, argValues));
     }
 
     return result;
-  },
-};
+  };
+}
+
+module.exports = { loadTo };
