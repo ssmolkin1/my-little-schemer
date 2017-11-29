@@ -147,10 +147,13 @@ function loadTo(s) {
   s.sExpression = (exp) => {
     const revSymEnts = {};
     const revSymVals = {};
+    const symLib = s.SPEC_SYM;
+    const usedSyms = symLib.IN_USE;
+    const useDefs = symLib.USE_DEFINED;
 
     // delete overriden defined symbols ---
-    const clonedSpecSym = Object.assign({}, s.SPEC_SYM);
-    const deleteList = clonedSpecSym.IN_USE.slice();
+    const clonedSpecSym = Object.assign({}, symLib);
+    const deleteList = usedSyms.slice();
 
     deleteList.push('primitive');
 
@@ -164,11 +167,21 @@ function loadTo(s) {
       });
     }
 
-    if (clonedSpecSym.USE_DEFINED) {
+    if (useDefs) {
       deleter('defined');
+    } else {
+      // And delete unused symbol libraries
+      delete clonedSpecSym.defined;
     }
 
-    clonedSpecSym.IN_USE.forEach((libName) => {
+    Object.keys(symLib).forEach((key) => {
+      if (deleteList.indexOf(key) === -1 && key !== 'defined') {
+        delete clonedSpecSym[key];
+      }
+    });
+    // ... end of delete unused symbol libraries
+
+    usedSyms.forEach((libName) => {
       deleteList.shift();
       deleter(libName);
     });
@@ -180,15 +193,12 @@ function loadTo(s) {
       const libName = ent[0];
       const syms = ent[1];
 
-      // use only symbol libraries which are in use
-      if ((libName === 'primitive') || (clonedSpecSym.USE_DEFINED && libName === 'defined') || (clonedSpecSym.IN_USE.indexOf(libName) > -1)) {
-        // create an object whose keys are library names and values are an array
-        // of key-value pairs of symbol and defintion
-        revSymEnts[libName] = Object.entries(syms);
-        // create an object whose keys are library names and values are an array
-        // of the defintions
-        revSymVals[libName] = Object.values(syms);
-      }
+      // create an object whose keys are library names and values are an array
+      // of key-value pairs of symbol and defintion
+      revSymEnts[libName] = Object.entries(syms);
+      // create an object whose keys are library names and values are an array
+      // of the defintions
+      revSymVals[libName] = Object.values(syms);
     });
 
     function parens(a) {
@@ -235,7 +245,7 @@ function loadTo(s) {
     }
 
     function specailSymbols(a) {
-      if (clonedSpecSym.USE_DEFINED) {
+      if (useDefs) {
         const defI = revSymVals.defined.indexOf(a);
 
         if (defI > -1) {
@@ -243,7 +253,7 @@ function loadTo(s) {
         }
       }
 
-      const sfl = getSymFromRevLib(clonedSpecSym.IN_USE, a);
+      const sfl = getSymFromRevLib(usedSyms, a);
 
       if (sfl !== '#NOT_DEFINED') {
         return sfl;
