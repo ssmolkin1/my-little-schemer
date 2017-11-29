@@ -151,7 +151,7 @@ function loadTo(s) {
     // delete overriden defined symbols ---
     const clonedSpecSym = Object.assign({}, s.SPEC_SYM);
     const deleteList = clonedSpecSym.IN_USE.slice();
-    
+
     deleteList.push('primitive');
 
     function deleter(lib) {
@@ -237,7 +237,7 @@ function loadTo(s) {
     function specailSymbols(a) {
       if (clonedSpecSym.USE_DEFINED) {
         const defI = revSymVals.defined.indexOf(a);
-   
+
         if (defI > -1) {
           return revSymEnts.defined[defI][0];
         }
