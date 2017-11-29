@@ -8,25 +8,16 @@ function loadTo(s) {
   };
 
   s.getDefinition = (name) => {
-    let def = name;
-
     // User-defined terms take precedence over primitives and libraries
     if (s.LIBS.USE_DEFINED && Object.prototype.hasOwnProperty.call(s.LIBS.defined, name)) {
-      def = s.LIBS.defined[name];
+      return s.LIBS.defined[name];
     }
 
-    s.LIBS.IN_USE.forEach((libName) => {
-      if (Object.prototype.hasOwnProperty.call(s.LIBS[libName], name)) {
-        def = s.LIBS[libName][name];
-      }
-    });
+    const dfl = s.getDefFromLibs(s, s.LIBS, s.LIBS.IN_USE, name);
 
-    if (Object.prototype.hasOwnProperty.call(s, name)) {
-      def = s[name];
-    }
-
-    return def;
+    return dfl !== '#NOT_DEFINED' ? dfl : name;
   };
+
 
   s.value = (exp) => {
     if (s.isObject(exp)) {
@@ -34,7 +25,7 @@ function loadTo(s) {
       s.replaceObjVal(copy, s.value);
       return copy;
     }
-    
+
     if (s.isAtom(exp) || s.isNull(exp)) {
       const def = s.getDefinition(exp);
       return s.isEqual(exp, def) ? exp : s.value(def);
@@ -50,12 +41,12 @@ function loadTo(s) {
     }
 
     if (s.isFunction(first)) {
-      if (first === s.lambda || first === s.define) {
+      if (first === s.lambda || first === s.define || first === s.quote) {
         return first(...rest);
       }
 
       // Evaluation control needs to be handed off specially to these functions
-      if (first === s.cond || first === s['||'] || first === s['&&'] || first === s.quote) {
+      if (first === s.cond || first === s['||'] || first === s['&&']) {
         return first(rest);
       }
 

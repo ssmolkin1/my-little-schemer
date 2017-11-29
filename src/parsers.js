@@ -84,14 +84,15 @@ function loadTo(s) {
     function specailSymbols(a) {
       const def = s.SPEC_SYM.defined;
 
-      if (Object.prototype.hasOwnProperty.call(def, a)) {
+      if (s.SPEC_SYM.USE_DEFINED && Object.prototype.hasOwnProperty.call(def, a)) {
         return def[a];
       }
 
       const prim = s.SPEC_SYM.primitive;
+      const dfl = s.getDefFromLibs(prim, s.SPEC_SYM, s.SPEC_SYM.IN_USE, a);
 
-      if (Object.prototype.hasOwnProperty.call(prim, a)) {
-        return prim[a];
+      if (dfl !== '#NOT_DEFINED') {
+        return dfl;
       }
 
       if (typeof a === 'string') {
@@ -147,15 +148,48 @@ function loadTo(s) {
     const revSymEnts = {};
     const revSymVals = {};
 
-    const sse = Object.entries(s.SPEC_SYM);
+    // delete overriden defined symbols ---
+    const clonedSpecSym = Object.assign({}, s.SPEC_SYM);
+    const deleteList = clonedSpecSym.IN_USE.slice();
+    
+    deleteList.push('primitive');
+
+    function deleter(lib) {
+      const keys = Object.keys(clonedSpecSym[lib]);
+
+      deleteList.forEach((libName) => {
+        keys.forEach((key) => {
+          delete clonedSpecSym[libName][key];
+        });
+      });
+    }
+
+    if (clonedSpecSym.USE_DEFINED) {
+      deleter('defined');
+    }
+
+    clonedSpecSym.IN_USE.forEach((libName) => {
+      deleteList.shift();
+      deleter(libName);
+    });
+    //  --- end of delete overriden defined symbols
+
+    const sse = Object.entries(clonedSpecSym);
 
     sse.forEach((ent) => {
-      revSymEnts[ent[0]] = Object.entries(ent[1]);
-      revSymVals[ent[0]] = Object.values(ent[1]);      
-    });
+      const libName = ent[0];
+      const syms = ent[1];
 
-    const def = revSymEnts.defined;
-    const prim = revSymEnts.primitive;
+      // use only symbol libraries which are in use
+      if ((libName === 'primitive') || (clonedSpecSym.USE_DEFINED && libName === 'defined') || (clonedSpecSym.IN_USE.indexOf(libName) > -1)) {
+        // create an object whose keys are library names and values are an array
+        // of key-value pairs of symbol and defintion
+        revSymEnts[libName] = Object.entries(syms);
+        // create an object whose keys are library names and values are an array
+        // of the defintions
+        revSymVals[libName] = Object.values(syms);
+      }
+    });
 
     function parens(a) {
       return s.cons(['('], s.cons(a, [')']));
@@ -176,17 +210,43 @@ function loadTo(s) {
       return s.cons(parens(convert(first)), convert(rest));
     }
 
-    function specailSymbols(a) {
-      const defI = revSymVals.defined.indexOf(a);
+    function getSymFromRevLib(libNames, name) {
+      if (s.isNull(libNames)) {
+        const primI = revSymVals.primitive.indexOf(name);
 
-      if (defI > -1) {
-        return def[defI][0];
+        if (primI > -1) {
+          return revSymEnts.primitive[primI][0];
+        }
+
+        // Returns special message if name is not defined
+        // (cannot return undefined becuase undefined might be the definiton of name)
+        return '#NOT_DEFINED';
       }
 
-      const primI = revSymVals.primitive.indexOf(a);
+      const first = s.car(libNames);
+      const rest = s.cdr(libNames);
+      const firstLibI = revSymVals[first].indexOf(name);
 
-      if (primI > -1) {
-        return prim[primI][0];
+      if (firstLibI > -1) {
+        return revSymEnts[first][firstLibI][0];
+      }
+
+      return getSymFromRevLib(rest, name);
+    }
+
+    function specailSymbols(a) {
+      if (clonedSpecSym.USE_DEFINED) {
+        const defI = revSymVals.defined.indexOf(a);
+   
+        if (defI > -1) {
+          return revSymEnts.defined[defI][0];
+        }
+      }
+
+      const sfl = getSymFromRevLib(clonedSpecSym.IN_USE, a);
+
+      if (sfl !== '#NOT_DEFINED') {
+        return sfl;
       }
 
       if (s.isObject(a)) {

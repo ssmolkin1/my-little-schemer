@@ -27,9 +27,7 @@ function loadTo(s) {
     return n;
   };
 
-  s.quote = (exp) => {
-    return exp;
-  };
+  s.quote = exp => exp;
 
   s.add1 = (n) => {
     if (!s.isNumber(n)) {
