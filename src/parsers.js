@@ -31,117 +31,127 @@ function loadTo(s) {
     });
   };
 
-  s.jSExpression = (string) => {
-    if (typeof string !== 'string') {
-      throw new Error('The argument must be a string');
-    }
+  s.jSExpression = (input) => {
+    function toJS(string) {
+      if (typeof string !== 'string') {
+        throw new Error('The argument must be a string');
+      }
 
-    function formatText(txt) {
-      return txt.slice()
-        .replace(/"/g, '#\\"#')
-        .replace(/[{}[\],]/g, '#$&#');
-    }
+      function formatText(txt) {
+        return txt.slice()
+          .replace(/"/g, '#\\"#')
+          .replace(/[{}[\],]/g, '#$&#');
+      }
 
-    let exp = `(${formatText(string.slice(0))})`; // clone string wrap string in outer parens (valid expressions must be wrapped in outer parens)
+      let exp = `(${formatText(string.slice(0))})`; // clone string wrap string in outer parens (valid expressions must be wrapped in outer parens)
 
-    exp = JSON.parse(exp
-      // split string on spaces, parens and commas (the last one to avoid errors)
-      .split(/([()\s,])/)
-      // filter out empty strings, white space and newline
-      .filter(a => (a !== '' && a !== ' ' && a !== '\n'))
-      // handles backslash characters
-      .map((a) => {
-        if (a === '\\') {
-          return '\\\\';
+      exp = JSON.parse(exp
+        // split string on spaces, parens and commas (the last one to avoid errors)
+        .split(/([()\s,])/)
+        // filter out empty strings, white space and newline
+        .filter(a => (a !== '' && a !== ' ' && a !== '\n'))
+        // handles backslash characters
+        .map((a) => {
+          if (a === '\\') {
+            return '\\\\';
+          }
+
+          return a;
+        })
+        // create a string representation of an array
+        .join(',')
+        // wrap everything except parentheses in double quotes (required to parse JSON)
+        .replace(/([^,()]+),/g, '"$1",')
+        // unwrap numbers from double quotes, except those which are object keys
+        .replace(/"(\d+\.?\d*|\.\d+)"([^:])/g, '$1$2')
+        // handle double double quotes
+        .replace(/""([^"]*)""/g, '"\\"$1\\""')
+        // handles JSON objects
+        .replace(/([\]}])"/g, '$1')
+        .replace(/"([\[{])/g, '$1')
+        .replace(/"?,,,"?/g, ',')
+        .replace(/\\,\\"/g, ',')
+        // handle grammatical periods
+        .replace(/,([.]+),/g, ',"$1",')
+        // add leading zero to decimal numbers, like '.5' (required to parse JSON)
+        .replace(/(,)(\.)/g, '$10$2')
+        // remove unecessary decimal point from integers, like '5.' (required to parse  JSON)
+        .replace(/\.(,)/g, '$1')
+        // replace ( with [
+        .replace(/\(,/g, '[')
+        // replace ) with ]
+        .replace(/,?\)/g, ']'));
+
+      function specailSymbols(a) {
+        const def = s.SPEC_SYM.defined;
+
+        if (s.SPEC_SYM.USE_DEFINED && Object.prototype.hasOwnProperty.call(def, a)) {
+          return def[a];
+        }
+
+        const prim = s.SPEC_SYM.primitive;
+        const dfl = s.getDefFromLibs(prim, s.SPEC_SYM, s.SPEC_SYM.IN_USE, a);
+
+        if (dfl !== '#NOT_DEFINED') {
+          return dfl;
+        }
+
+        if (typeof a === 'string') {
+          // handles commas, double quotes and brackets
+          const reformatted = a.slice()
+            .replace(/#([{}[\],])#/g, '$1')
+            .replace(/#"#/g, '"');
+
+          // turn to JSON
+          if (/(^{.*}$)|(^\[.*\]$)/.test(reformatted)) {
+            return replaceSpecialSymbols(JSON.parse(reformatted));
+          }
+
+          return reformatted;
         }
 
         return a;
-      })
-      // create a string representation of an array
-      .join(',')
-      // wrap everything except parentheses in double quotes (required to parse JSON)
-      .replace(/([^,()]+),/g, '"$1",')
-      // unwrap numbers from double quotes, except those which are object keys
-      .replace(/"(\d+\.?\d*|\.\d+)"([^:])/g, '$1$2')
-      // handle double double quotes
-      .replace(/""([^"]*)""/g, '"\\"$1\\""')
-      // handles JSON objects
-      .replace(/([\]}])"/g, '$1')
-      .replace(/"([\[{])/g, '$1')
-      .replace(/"?,,,"?/g, ',')
-      .replace(/\\,\\"/g, ',')
-      // handle grammatical periods
-      .replace(/,([.]+),/g, ',"$1",')
-      // add leading zero to decimal numbers, like '.5' (required to parse JSON)
-      .replace(/(,)(\.)/g, '$10$2')
-      // remove unecessary decimal point from integers, like '5.' (required to parse  JSON)
-      .replace(/\.(,)/g, '$1')
-      // replace ( with [
-      .replace(/\(,/g, '[')
-      // replace ) with ]
-      .replace(/,?\)/g, ']'));
-
-    function specailSymbols(a) {
-      const def = s.SPEC_SYM.defined;
-
-      if (s.SPEC_SYM.USE_DEFINED && Object.prototype.hasOwnProperty.call(def, a)) {
-        return def[a];
       }
 
-      const prim = s.SPEC_SYM.primitive;
-      const dfl = s.getDefFromLibs(prim, s.SPEC_SYM, s.SPEC_SYM.IN_USE, a);
-
-      if (dfl !== '#NOT_DEFINED') {
-        return dfl;
-      }
-
-      if (typeof a === 'string') {
-        // handles commas, double quotes and brackets
-        const reformatted = a.slice()
-          .replace(/#([{}[\],])#/g, '$1')
-          .replace(/#"#/g, '"');
-
-        // turn to JSON
-        if (/(^{.*}$)|(^\[.*\]$)/.test(reformatted)) {
-          return replaceSpecialSymbols(JSON.parse(reformatted));
+      function replaceSpecialSymbols(sExp) {
+        if (s.isObject(sExp)) {
+          s.replaceObjVal(sExp, replaceSpecialSymbols);
+          return sExp;
         }
 
-        return reformatted;
+        if (s.isAtom(sExp)) {
+          return specailSymbols(sExp);
+        }
+
+        if (s.isNull(sExp)) {
+          return sExp;
+        }
+
+        const first = s.car(sExp);
+        const rest = s.cdr(sExp);
+
+        if (s.isObject(first)) {
+          s.replaceObjVal(first, replaceSpecialSymbols);
+          return s.cons(first, replaceSpecialSymbols(rest));
+        }
+
+        if (s.isAtom(first)) {
+          return s.cons(specailSymbols(first), replaceSpecialSymbols(rest));
+        }
+
+        return s.cons(replaceSpecialSymbols(first), replaceSpecialSymbols(rest));
       }
 
-      return a;
+      return s.car(replaceSpecialSymbols(exp));
     }
 
-    function replaceSpecialSymbols(sExp) {
-      if (s.isObject(sExp)) {
-        s.replaceObjVal(sExp, replaceSpecialSymbols);
-        return sExp;
-      }
-
-      if (s.isAtom(sExp)) {
-        return specailSymbols(sExp);
-      }
-
-      if (s.isNull(sExp)) {
-        return sExp;
-      }
-
-      const first = s.car(sExp);
-      const rest = s.cdr(sExp);
-
-      if (s.isObject(first)) {
-        s.replaceObjVal(first, replaceSpecialSymbols);
-        return s.cons(first, replaceSpecialSymbols(rest));
-      }
-
-      if (s.isAtom(first)) {
-        return s.cons(specailSymbols(first), replaceSpecialSymbols(rest));
-      }
-
-      return s.cons(replaceSpecialSymbols(first), replaceSpecialSymbols(rest));
+    // input can be an array of S-Expression strings...
+    if (s.isList(input)) {
+      return input.map(string => toJS(string));
     }
 
-    return s.car(replaceSpecialSymbols(exp));
+    // ... or a single string
+    return toJS(input);
   };
 
   s.sExpression = (exp) => {
