@@ -24,11 +24,48 @@ function loadTo(s) {
       const val = ent[1];
 
       if (s.isObject(val)) {
-        s.replaceObjVal(val);
+        s.replaceObjVal(val, replacer);
       }
 
       obj[key] = replacer(val);
     });
+  };
+
+  // Converts object (including all nested objects) into a rel
+  s.toRel = (obj, stringify = false, toJSE = false) => {
+    function relify(l) {
+      if (s.isNull(l)) {
+        return l;
+      }
+
+      const first = s.car(l);
+      const rest = s.cdr(l);
+
+      if (s.isObject(first)) {
+        return s.cons(relify(Object.entries(first)), relify(rest));
+      }
+
+      if (s.isAtom(first)) {
+        return s.cons(first, relify(rest));
+      }
+
+      return s.cons(relify(first), relify(rest));
+    }
+
+    let result = relify(Object.entries(obj));
+
+    // Converts the result to a string for easy fit into an S-Expression
+    if (stringify) {
+      result = JSON.stringify(result);
+    }
+
+    // Converts to jS-Expression if standalone conversion is desired; @param stringify must
+    // also be true for this to work
+    if (toJSE) {
+      result = s.jSExpression(result);
+    }
+
+    return result;
   };
 
   s.jSExpression = (input) => {
