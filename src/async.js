@@ -15,9 +15,9 @@ function loadTo(s) {
     }
   };
 
-  s.jSExpressionAsync = async function(string, callback) {
+  s.jSExpressionAsync = async function(input, callback) {
     try {
-      return callback(await s.jSExpression(string));
+      return callback(await s.jSExpression(input));
     } catch (e) {
       return console.error(e);
     }
