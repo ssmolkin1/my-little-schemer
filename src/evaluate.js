@@ -56,14 +56,6 @@ function loadTo(s) {
     return s.cons(s.value(first), s.value(rest));
   };
 
-  s.valueAsync = async function(exp) {
-    try {
-      return await s.value(exp);
-    } catch (e) {
-      return new Error(e);
-    }
-  };
-
   s.evaluate = (scheme, js = false, final = false, convert = false) => {
     let input;
 
