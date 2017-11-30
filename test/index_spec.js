@@ -195,12 +195,6 @@ describe('jSExpression', () => {
     expect(string).to.equal('(car (cdr l))');
   });
 
-  it('only works if the argument is a string', () => {
-    const notString = ['world'];
-
-    expect(() => s.jSExpression(notString)).to.throw();
-  });
-
   it('returns an atom if the argument is a string representing an atom', () => {
     const string = 'hello';
 
@@ -262,4 +256,4 @@ describe('evaluate', () => {
 
     expect(s.evaluate(input, true, false, true)).to.equal('( #null #Infinity #NaN #undefined )');
   });
-})
+});

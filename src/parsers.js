@@ -292,6 +292,13 @@ function loadTo(s) {
     }
 
     function specailSymbols(a) {
+      // Indexing in getSymFromRevLid won't work for NaN (since NaN !== NaN), so has to be hardcoded.
+      // Unfortunately this means you would have to override NaN seperately to
+      // set the symbol...
+      if (Number.isNaN(a)) {
+        return '#NaN';
+      }
+
       if (useDefs) {
         const defI = revSymVals.defined.indexOf(a);
 

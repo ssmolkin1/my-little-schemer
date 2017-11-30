@@ -1,6 +1,4 @@
 function loadTo(s) {
-  // s.caller = lda => (...args) => lda.call(this, ...args);
-
   s.getDefFromLibs = (prim, lib, libNames, name) => {
     if (s.isNull(libNames)) {
       if (Object.prototype.hasOwnProperty.call(prim, name)) {

@@ -27,6 +27,12 @@ function loadTo(s) {
     }
 
     if (s.isAtom(exp) || s.isNull(exp)) {
+      // NaN must be handled seperately, since it will create in infinite
+      // loop if run through the ternary termination condition
+      // below (since NaN !== NaN)
+      if (Number.isNaN(exp)) {
+        return exp;
+      }
       const def = s.getDefinition(exp);
       return s.isEqual(exp, def) ? exp : s.value(def);
     }

@@ -3,7 +3,7 @@ function loadTo(s) {
 
   s.isAtom = exp => !s.isList(exp);
 
-  s.isObject = a => s.isAtom(a) && (typeof a === 'object');
+  s.isObject = a => s.isAtom(a) && (typeof a === 'object') && a !== null;
 
   s.isNumber = exp => !Number.isNaN(exp) && typeof exp === 'number';
 
