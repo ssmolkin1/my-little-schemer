@@ -15,7 +15,7 @@
   "repository": "ssmolkin1/sams-little-schemer",
   "scripts": {
     "test": "mocha test/",
-    "test:watch": "npm run test -- --watch"
+    "lint": "eslint index.js src/"
   },
   "devDependencies": {
     "chai": "^4.1.2",

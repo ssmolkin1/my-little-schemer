@@ -16,13 +16,9 @@ function loadTo(s) {
     return s.cond(s.cdr(args));
   };
 
-  s['||'] = (args) => {
-    return s.value(s.car(args)) || s.value(s.car(s.cdr(args)));
-  };
+  s['||'] = args => s.value(s.car(args)) || s.value(s.car(s.cdr(args)));
 
-  s['&&'] = (args) => {
-    return s.value(s.car(args)) && s.value(s.car(s.cdr(args)));
-  };
+  s['&&'] = args => s.value(s.car(args)) && s.value(s.car(s.cdr(args)));
 }
 
 module.exports = { loadTo };

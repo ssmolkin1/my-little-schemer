@@ -1,6 +1,5 @@
 function loadTo(s) {
   s.lambda = (args, func) => {
-
     function replace(list, matches, replacements) {
       if (s.isNull(list)) {
         return list;

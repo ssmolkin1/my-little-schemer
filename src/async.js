@@ -3,15 +3,15 @@ function loadTo(s) {
     return s.value(exp);
   };
 
-  s.evaluateAsync = async function (scheme, callback, js = false, final = false, convert = false) {
+  s.evaluateAsync = async function (scheme, js = false, final = false, convert = false) {
     return s.evaluate(scheme, js, final, convert);
   };
 
-  s.jSExpressionAsync = async function (input, callback) {
+  s.jSExpressionAsync = async function (input) {
     return s.jSExpression(input);
   };
 
-  s.sExpressionAsync = async function (exp, callback) {
+  s.sExpressionAsync = async function (exp) {
     return s.sExpression(exp);
   };
 }

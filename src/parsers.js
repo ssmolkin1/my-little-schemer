@@ -105,7 +105,7 @@ function loadTo(s) {
         .replace(/""([^"]*)""/g, '"\\"$1\\""')
         // handles JSON objects
         .replace(/([\]}])"/g, '$1')
-        .replace(/"([\[{])/g, '$1')
+        .replace(/"([[{])/g, '$1')
         .replace(/"?,,,"?/g, ',')
         .replace(/\\,\\"/g, ',')
         // handle grammatical periods
@@ -292,9 +292,9 @@ function loadTo(s) {
     }
 
     function specailSymbols(a) {
-      // Indexing in getSymFromRevLid won't work for NaN (since NaN !== NaN), so has to be hardcoded.
-      // Unfortunately this means you would have to override NaN seperately to
-      // set the symbol...
+      // Indexing in getSymFromRevLid won't work for NaN (since NaN !== NaN),
+      // so has to be hardcoded. Unfortunately this means you would have to
+      // override NaN seperately to set the symbol...
       if (Number.isNaN(a)) {
         return '#NaN';
       }
