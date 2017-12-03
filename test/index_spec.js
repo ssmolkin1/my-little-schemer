@@ -1,7 +1,7 @@
 /* global it, describe */
 
-import { expect } from 'chai';
-import s from '../index';
+const { expect } = require('chai');
+const s = require('../index');
 
 describe('isList', () => {
   it('is true for lists', () => {

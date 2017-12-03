@@ -14,24 +14,16 @@
   "author": "Sam Smolkin <sam@future-precedent.org> (http://www.future-precedent.org/)",
   "repository": "ssmolkin1/sams-little-schemer",
   "scripts": {
-    "test": "mocha --require babel-core/register --require ./test/test_helper.js test/",
+    "test": "mocha test/",
     "test:watch": "npm run test -- --watch"
   },
-  "babel": {
-    "presets": [
-      "env"
-    ]
-  },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
     "chai": "^4.1.2",
-    "eslint": "^4.11.0",
+    "eslint": "^4.12.1",
     "eslint-config-airbnb": "^16.1.0",
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-jsx-a11y": "^6.0.2",
-    "eslint-plugin-react": "^7.4.0",
+    "eslint-plugin-react": "^7.5.1",
     "mocha": "^4.0.1"
   }
 }
