@@ -8,6 +8,8 @@
 
         "no-console": ["error", { "allow" : ["warn", "error"] }],
         
-        "no-param-reassign": ["error", { "props": false }]
+        "no-param-reassign": ["error", { "props": false }],
+
+        "no-underscore-dangle": 0
     }
 }

@@ -20,51 +20,104 @@ function loadTo(s) {
     return s.getDefFromLibs(prim, lib, rest, name);
   };
 
-  s.getLibNames = (...libs) => libs.map(lib => lib.getName());
+  // Get name from one or more library modules
+  s.getLibName = (...libs) => libs.map(lib => lib.getName());
 
-  s.unloadLibs = (...libNames) => {
-    const usedLibs = s.LIBS.IN_USE;
+  // "Soft" unload def and sym libraries (removes names from "IN_USE", but does
+  // not delete lib from s object)
+  s._unloadLib = (base, ...libNames) => {
+    const usedLibs = base.IN_USE;
     libNames.forEach((name) => {
-      usedLibs.splice(usedLibs.indexOf(name), 1);
+      const i = usedLibs.indexOf(name);
+
+      if (i !== -1) {
+        usedLibs.splice(i, 1);
+      }
     });
   };
 
-  s.removeLibs = (...libNames) => {
-    const libs = s.LIBS;
-    libNames.forEach(name => delete libs[name]);
-    s.unloadLibs(...libNames);
+  s.unloadDefLib = (...libNames) => s._unloadLib(s.LIBS, ...libNames);
+
+  s.unloadSymLib = (...libNames) => s._unloadLib(s.SPEC_SYM, ...libNames);
+
+  s.unloadLib = (...libNames) => {
+    s.unloadDefLib(...libNames);
+    s.unloadSymLib(...libNames);
   };
 
-  s.reloadLibs = (libNames, i = 0) => {
-    const usedLibs = s.LIBS.IN_USE;
+  // "Hard" unload by removing def and sym libs from s object (and also remove
+  // names from "IN_USE")
+  s._removeLib = (base, ...libNames) => {
+    libNames.forEach(name => delete base[name]);
+    s._unloadLib(base, ...libNames);
+  };
 
-    function reload(name) {
+  s.removeDefLib = (...libNames) => s._removeLib(s.LIBS, ...libNames);
+
+  s.removeSymLib = (...libNames) => s._removeLib(s.SPEC_SYM, ...libNames);
+
+  s.removeLib = (...libNames) => {
+    s.removeDefLib(...libNames);
+    s.removeSymLib(...libNames);
+  };
+
+  // Reload "soft" unloaded libs
+  s._reloadLib = (base, ...libNames) => {
+    const usedLibs = base.IN_USE;
+
+    libNames.forEach((name) => {
       if (usedLibs.indexOf(name) !== -1) {
-        console.warn(`The ${name} library is already in use.`);
+        console.warn(`The ${name} ${base === s.LIBS ? 'definition' : 'symbol'} library is already in use.`);
       } else {
-        usedLibs.splice(i, 0, name);
+        usedLibs.unshift(name);
       }
-    }
-
-    if (s.isList(libNames)) {
-      libNames.forEach(name => reload(name));
-    } else {  // if only one name is passed as an argument
-      reload(libNames);
-    }
+    });
   };
 
-  s.loadLibs = (...libModules) => {
-    const libs = s.LIBS;
+  s.reloadDefLib = (...libNames) => s._reloadLib(s.LIBS, ...libNames);
+
+  s.reloadSymLib = (...libNames) => s._reloadLib(s.SPEC_SYM, ...libNames);
+
+  s.reloadLib = (...libNames) => {
+    s.reloadDefLib(...libNames);
+    s.reloadSymLib(...libNames);
+  };
+
+  // Load def and sym library modules. Does a hard unload in case the library is already loaded;
+  s.loadLib = (...libModules) => {
     libModules.forEach((mod) => {
       const name = mod.getName();
-      if (Object.hasOwnProperty.call(libs, name)) {
-        s.reloadLibs(name);
-      } else {
-        mod.loadTo(s);
-      }
+      s.removeLib(name);
+      mod.loadTo(s);
     });
   };
 
+  // Define symbols and variables and clear symbol and variable definitions
+  s.define = (name, exp) => {
+    if (typeof name !== 'string') {
+      throw new Error('The Law of Define: The first argument must be a string.');
+    }
+
+    s.LIBS.defined[name] = s.value(exp);
+  };
+
+  s.undefine = (name) => {
+    delete s.LIBS.defined[name];
+  };
+
+  s.setSym = (name, exp) => {
+    if (typeof name !== 'string') {
+      throw new Error('The Law of SetSym: The first argument must be a string.');
+    }
+
+    s.SPEC_SYM.defined[name] = exp;
+  };
+
+  s.remSym = (name) => {
+    delete s.SPEC_SYM.defined[name];
+  };
+
+  // Hard and soft unload user definitions
   s.loadDefs = () => {
     s.LIBS.USE_DEFINED = true;
   };

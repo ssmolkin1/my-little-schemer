@@ -44,18 +44,6 @@ function loadTo(s) {
 
     return n - 1;
   };
-
-  s.define = (name, exp) => {
-    if (!s.isAtom(name)) {
-      throw new Error('The Law of Define: The first argument must be an atom.');
-    }
-
-    s[name] = s.value(exp);
-  };
-
-  s.undefine = (name) => {
-    delete s[name];
-  };
 }
 
 module.exports = { loadTo };
