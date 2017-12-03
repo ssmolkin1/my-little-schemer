@@ -92,7 +92,7 @@ function loadTo(s) {
     });
   };
 
-  // Define symbols and variables and clear symbol and variable definitions
+  // Set and clear symbol and defintions
   s.define = (name, exp) => {
     if (typeof name !== 'string') {
       throw new Error('The Law of Define: The first argument must be a string.');
@@ -117,7 +117,7 @@ function loadTo(s) {
     delete s.SPEC_SYM.defined[name];
   };
 
-  // Hard and soft unload user definitions
+  // Hard and soft unload user definitions and symbols
   s.loadDefs = () => {
     s.LIBS.USE_DEFINED = true;
   };
@@ -130,22 +130,75 @@ function loadTo(s) {
     s.LIBS.defined = {};
   };
 
-  s.setUsedLibs = (array) => {
-    s.LIBS.IN_USE = array;
+  s.loadSyms = () => {
+    s.SPEC_SYM.USE_DEFINED = true;
   };
 
-  s.getUsedLibs = () => s.LIBS.IN_USE.slice();
+  s.unloadSyms = () => {
+    s.SPEC_SYM.USE_DEFINED = false;
+  };
 
-  s.getLoadOrder = () => {
-    const libs = s.LIBS;
-    const result = s.getUsedLibs();
+  s.clearSyms = () => {
+    s.SPEC_SYM.defined = {};
+  };
+
+  // Set used def and sym libs
+  s._setUsedLibs = (base, array) => {
+    base.IN_USE = array;
+  };
+
+  s.setUsedDefLibs = array => s._setUsedLibs(s.LIBS, array);
+
+  s.setUsedSymLibs = array => s._setUsedLibs(s.SPEC_SYM, array);
+
+  s.setUsedLibs = (array) => {
+    s.setUsedDefLibs(array);
+    s.setUsedSymLibs(array);
+  };
+
+  // Get used def and sym libs
+  s._getUsedLibs = base => base.IN_USE.slice();
+
+  s.getUsedDefLibs = () => s._getUsedLibs(s.LIBS);
+
+  s.getUsedSymLibs = () => s._getUsedLibs(s.SPEC_SYM);
+
+  s.getUsedLibs = () => {
+    const result = {};
+
+    result.defintions = s.getUsedDefLibs();
+    result.symbols = s.getUsedSymLibs();
+
+    return result;
+  };
+
+  // Get load order of sym and def libs: Load order is shown such that the rightmost item
+  // is the last loaded and overrides anything to the left. This is the opposite of
+  // how the IN_USE array works (lowest index (leftmost) overrides), although the IN_USE
+  // array handles loading as you would expect (libs are loaded to front of array, so last loaded
+  // lib overrides anything that came before it).
+  s._getLoadOrder = (base) => {
+    const result = s._getUsedLibs(base);
     result.push('primitive');
 
-    if (libs.USE_DEFINED) {
+    if (base.USE_DEFINED) {
       result.unshift('defined');
     }
 
     return result.reverse();
+  };
+
+  s.getDefLoadOrder = () => s._getLoadOrder(s.LIBS);
+
+  s.getSymLoadOrder = () => s._getLoadOrder(s.SPEC_SYM);
+
+  s.getLoadOrder = () => {
+    const result = {};
+
+    result.defintions = s.getDefLoadOrder();
+    result.symbols = s.getSymLoadOrder();
+
+    return result;
   };
 }
 
