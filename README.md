@@ -1,5 +1,5 @@
-# Sam's Little Schemer
-An interpreter for integrating Scheme into JavaScript, providing a small set of primitive functions inspired by [The Little Schemer, 4th Ed](https://mitpress.mit.edu/books/little-schemer).
+# My Little Schemer
+An interface for interoperable Scheme and JavaScript. Inspired by [The Little Schemer, 4th Ed](https://mitpress.mit.edu/books/little-schemer).
 
 ## Design and purpose
 This module provides an interface for integrating Scheme into JavaScript applications. The primary goal is interoperability, rather than writing in Scheme alone (although that is an option). Hence, this dialect of Scheme, while inspired [The Little Schemer, 4th Ed](https://mitpress.mit.edu/books/little-schemer), has some additions and changes that make it more useful for integration in JavaScript apps.
@@ -9,7 +9,7 @@ The power and flexibility of Scheme syntax can be harnessed to do what functiona
 ### Four ways to write
 There are four ways to write using this module:
 ```js 
-const s = require('sams-little-schemer');
+const s = require('my-little-schemer');
 
 // Scheme
 s.evaluate(`(
@@ -71,18 +71,18 @@ checkForRunOnSentences(para); // Whoa, you've got a long one there!
 ## Installation
 From the command line:
 ``` 
-npm install sams-little-schemer
+npm install my-little-schemer
 ```
 
 ## Usage
 ### Including the module
 CommonJS:
 ``` js
-const s = require('sams-little-schemer');
+const s = require('my-little-schemer');
 ```
 ES6:
 ``` js
-import s from 'sams-little-schemer';
+import s from 'my-little-schemer';
 ```
 ### jS-Expressions
 

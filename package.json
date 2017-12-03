@@ -1,14 +1,13 @@
 {
-  "name": "sams-little-schemer",
+  "name": "my-little-schemer",
   "version": "1.0.0",
   "main": "index.js",
-  "description": "A scheme interpreter providing a minimal set of primitive functions based on The Little Schemer, 4th Ed.",
+  "description": "Interface for interoperable Scheme and JavaScript. Inspired by The Little Schemer, 4th Ed.",
   "keywords": [
     "scheme",
     "interpreter",
     "little",
-    "schemer",
-    "sam"
+    "schemer"
   ],
   "license": "MIT",
   "author": "Sam Smolkin <sam@future-precedent.org> (http://www.future-precedent.org/)",
