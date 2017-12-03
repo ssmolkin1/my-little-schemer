@@ -1,34 +1,18 @@
 function loadTo(s) {
-  s.valueAsync = async function(exp, callback) {
-    try {
-      return callback(await s.value(exp));
-    } catch (e) {
-      return console.error(e);
-    }
+  s.valueAsync = async function (exp) {
+    return s.value(exp);
   };
 
-  s.evaluateAsync = async function(scheme, callback, js = false, final = false, convert = false) {
-    try {
-      return callback(await s.evaluate(scheme, js, final, convert));
-    } catch (e) {
-      return console.error(e);
-    }
+  s.evaluateAsync = async function (scheme, callback, js = false, final = false, convert = false) {
+    return s.evaluate(scheme, js, final, convert);
   };
 
-  s.jSExpressionAsync = async function(input, callback) {
-    try {
-      return callback(await s.jSExpression(input));
-    } catch (e) {
-      return console.error(e);
-    }
+  s.jSExpressionAsync = async function (input, callback) {
+    return s.jSExpression(input);
   };
 
-  s.sExpressionAsync = async function(exp, callback) {
-    try {
-      return callback(await s.sExpression(exp));
-    } catch (e) {
-      return console.error(e);
-    }
+  s.sExpressionAsync = async function (exp, callback) {
+    return s.sExpression(exp);
   };
 }
 
