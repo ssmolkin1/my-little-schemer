@@ -11,7 +11,7 @@
   ],
   "license": "MIT",
   "author": "Sam Smolkin <sam@future-precedent.org> (http://www.future-precedent.org/)",
-  "repository": "ssmolkin1/sams-little-schemer",
+  "repository": "ssmolkin1/my-little-schemer",
   "scripts": {
     "test": "mocha test/",
     "lint": "eslint index.js src/"
