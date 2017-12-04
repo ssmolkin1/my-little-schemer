@@ -1,18 +1,18 @@
-function loadTo(s) {
-  s.valueAsync = async function (exp) {
-    return s.value(exp);
+function loadTo(S) {
+  S.valueAsync = async function (exp) {
+    return S.value(exp);
   };
 
-  s.evaluateAsync = async function (scheme, js = false, final = false, convert = false) {
-    return s.evaluate(scheme, js, final, convert);
+  S.evaluateAsync = async function (scheme, js = false, final = false, convert = false) {
+    return S.evaluate(scheme, js, final, convert);
   };
 
-  s.jSExpressionAsync = async function (input) {
-    return s.jSExpression(input);
+  S.jSExpressionAsync = async function (input) {
+    return S.jSExpression(input);
   };
 
-  s.sExpressionAsync = async function (exp) {
-    return s.sExpression(exp);
+  S.sExpressionAsync = async function (exp) {
+    return S.sExpression(exp);
   };
 }
 

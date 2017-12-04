@@ -1,14 +1,14 @@
-const s = {};
+const S = {};
 
 // loadTo interface allows circular reference without using 'this'
-require('./src/evaluate').loadTo(s);
-require('./src/parsers').loadTo(s);
-require('./src/prim/types').loadTo(s);
-require('./src/prim/equals').loadTo(s);
-require('./src/prim/ops').loadTo(s);
-require('./src/prim/logical').loadTo(s);
-require('./src/prim/lambda').loadTo(s);
-require('./src/lib_utils').loadTo(s);
-require('./src/async').loadTo(s);
+require('./src/evaluate').loadTo(S);
+require('./src/parsers').loadTo(S);
+require('./src/prim/types').loadTo(S);
+require('./src/prim/equals').loadTo(S);
+require('./src/prim/ops').loadTo(S);
+require('./src/prim/logical').loadTo(S);
+require('./src/prim/lambda').loadTo(S);
+require('./src/lib_utils').loadTo(S);
+require('./src/async').loadTo(S);
 
-module.exports = s;
+module.exports = S;

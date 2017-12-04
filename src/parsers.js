@@ -1,5 +1,5 @@
-function loadTo(s) {
-  s.SPEC_SYM = {
+function loadTo(S) {
+  S.SPEC_SYM = {
     // Choose which symbol libraries to use
     IN_USE: [],
     // Choose whether to use user-defined symbols
@@ -18,13 +18,13 @@ function loadTo(s) {
   };
 
   // Deep replace objects
-  s.replaceObjVal = (obj, replacer) => {
+  S.replaceObjVal = (obj, replacer) => {
     Object.entries(obj).forEach((ent) => {
       const key = ent[0];
       const val = ent[1];
 
-      if (s.isObject(val)) {
-        s.replaceObjVal(val, replacer);
+      if (S.isObject(val)) {
+        S.replaceObjVal(val, replacer);
       }
 
       obj[key] = replacer(val);
@@ -32,24 +32,24 @@ function loadTo(s) {
   };
 
   // Converts object (including all nested objects) into a rel
-  s.toRel = (obj, stringify = false, toJSE = false) => {
+  S.toRel = (obj, stringify = false, toJSE = false) => {
     function relify(l) {
-      if (s.isNull(l)) {
+      if (S.isNull(l)) {
         return l;
       }
 
-      const first = s.car(l);
-      const rest = s.cdr(l);
+      const first = S.car(l);
+      const rest = S.cdr(l);
 
-      if (s.isObject(first)) {
-        return s.cons(relify(Object.entries(first)), relify(rest));
+      if (S.isObject(first)) {
+        return S.cons(relify(Object.entries(first)), relify(rest));
       }
 
-      if (s.isAtom(first)) {
-        return s.cons(first, relify(rest));
+      if (S.isAtom(first)) {
+        return S.cons(first, relify(rest));
       }
 
-      return s.cons(relify(first), relify(rest));
+      return S.cons(relify(first), relify(rest));
     }
 
     let result = relify(Object.entries(obj));
@@ -62,13 +62,13 @@ function loadTo(s) {
     // Converts to jS-Expression if standalone conversion is desired; @param stringify must
     // also be true for this to work
     if (toJSE) {
-      result = s.jSExpression(result);
+      result = S.jSExpression(result);
     }
 
     return result;
   };
 
-  s.jSExpression = (input) => {
+  S.jSExpression = (input) => {
     function toJS(string) {
       if (typeof string !== 'string') {
         throw new Error('The argument must be a string');
@@ -120,14 +120,14 @@ function loadTo(s) {
         .replace(/,?\)/g, ']'));
 
       function specailSymbols(a) {
-        const def = s.SPEC_SYM.defined;
+        const def = S.SPEC_SYM.defined;
 
-        if (s.SPEC_SYM.USE_DEFINED && Object.prototype.hasOwnProperty.call(def, a)) {
+        if (S.SPEC_SYM.USE_DEFINED && Object.prototype.hasOwnProperty.call(def, a)) {
           return def[a];
         }
 
-        const prim = s.SPEC_SYM.primitive;
-        const dfl = s.getDefFromLibs(prim, s.SPEC_SYM, s.SPEC_SYM.IN_USE, a);
+        const prim = S.SPEC_SYM.primitive;
+        const dfl = S.getDefFromLibs(prim, S.SPEC_SYM, S.SPEC_SYM.IN_USE, a);
 
         if (dfl !== '#NOT_DEFINED') {
           return dfl;
@@ -151,39 +151,39 @@ function loadTo(s) {
       }
 
       function replaceSpecialSymbols(sExp) {
-        if (s.isObject(sExp)) {
-          s.replaceObjVal(sExp, replaceSpecialSymbols);
+        if (S.isObject(sExp)) {
+          S.replaceObjVal(sExp, replaceSpecialSymbols);
           return sExp;
         }
 
-        if (s.isAtom(sExp)) {
+        if (S.isAtom(sExp)) {
           return specailSymbols(sExp);
         }
 
-        if (s.isNull(sExp)) {
+        if (S.isNull(sExp)) {
           return sExp;
         }
 
-        const first = s.car(sExp);
-        const rest = s.cdr(sExp);
+        const first = S.car(sExp);
+        const rest = S.cdr(sExp);
 
-        if (s.isObject(first)) {
-          s.replaceObjVal(first, replaceSpecialSymbols);
-          return s.cons(first, replaceSpecialSymbols(rest));
+        if (S.isObject(first)) {
+          S.replaceObjVal(first, replaceSpecialSymbols);
+          return S.cons(first, replaceSpecialSymbols(rest));
         }
 
-        if (s.isAtom(first)) {
-          return s.cons(specailSymbols(first), replaceSpecialSymbols(rest));
+        if (S.isAtom(first)) {
+          return S.cons(specailSymbols(first), replaceSpecialSymbols(rest));
         }
 
-        return s.cons(replaceSpecialSymbols(first), replaceSpecialSymbols(rest));
+        return S.cons(replaceSpecialSymbols(first), replaceSpecialSymbols(rest));
       }
 
-      return s.car(replaceSpecialSymbols(exp));
+      return S.car(replaceSpecialSymbols(exp));
     }
 
     // input can be an array of S-Expression strings...
-    if (s.isList(input)) {
+    if (S.isList(input)) {
       return input.map(string => toJS(string));
     }
 
@@ -191,10 +191,10 @@ function loadTo(s) {
     return toJS(input);
   };
 
-  s.sExpression = (exp) => {
+  S.sExpression = (exp) => {
     const revSymEnts = {};
     const revSymVals = {};
-    const symLib = s.SPEC_SYM;
+    const symLib = S.SPEC_SYM;
     const usedSyms = symLib.IN_USE;
     const useDefs = symLib.USE_DEFINED;
 
@@ -249,26 +249,26 @@ function loadTo(s) {
     });
 
     function parens(a) {
-      return s.cons(['('], s.cons(a, [')']));
+      return S.cons(['('], S.cons(a, [')']));
     }
 
     function convert(input) {
-      if (s.isAtom(input) || s.isNull(input)) {
+      if (S.isAtom(input) || S.isNull(input)) {
         return input;
       }
 
-      const first = s.car(input);
-      const rest = s.cdr(input);
+      const first = S.car(input);
+      const rest = S.cdr(input);
 
-      if (s.isAtom(first)) {
-        return s.cons(first, convert(rest));
+      if (S.isAtom(first)) {
+        return S.cons(first, convert(rest));
       }
 
-      return s.cons(parens(convert(first)), convert(rest));
+      return S.cons(parens(convert(first)), convert(rest));
     }
 
     function getSymFromRevLib(libNames, name) {
-      if (s.isNull(libNames)) {
+      if (S.isNull(libNames)) {
         const primI = revSymVals.primitive.indexOf(name);
 
         if (primI > -1) {
@@ -280,8 +280,8 @@ function loadTo(s) {
         return '#NOT_DEFINED';
       }
 
-      const first = s.car(libNames);
-      const rest = s.cdr(libNames);
+      const first = S.car(libNames);
+      const rest = S.cdr(libNames);
       const firstLibI = revSymVals[first].indexOf(name);
 
       if (firstLibI > -1) {
@@ -313,7 +313,7 @@ function loadTo(s) {
         return sfl;
       }
 
-      if (s.isObject(a)) {
+      if (S.isObject(a)) {
         const copy = Object.assign({}, a);
         replaceSpecialSymbols(copy);
         return JSON.stringify(copy);
@@ -323,40 +323,40 @@ function loadTo(s) {
     }
 
     function replaceSpecialSymbols(jSExp) {
-      if (s.isObject(jSExp)) {
+      if (S.isObject(jSExp)) {
         const copy = Object.assign({}, jSExp);
-        s.replaceObjVal(copy, replaceSpecialSymbols);
+        S.replaceObjVal(copy, replaceSpecialSymbols);
         return JSON.stringify(copy);
       }
 
-      if (s.isAtom(jSExp)) {
+      if (S.isAtom(jSExp)) {
         return specailSymbols(jSExp);
       }
 
-      if (s.isNull(jSExp)) {
+      if (S.isNull(jSExp)) {
         return jSExp;
       }
 
-      const first = s.car(jSExp);
-      const rest = s.cdr(jSExp);
+      const first = S.car(jSExp);
+      const rest = S.cdr(jSExp);
 
-      if (s.isObject(first)) {
+      if (S.isObject(first)) {
         const copy = Object.assign({}, first);
-        s.replaceObjVal(copy, replaceSpecialSymbols);
-        return s.cons(JSON.stringify(copy), replaceSpecialSymbols(rest));
+        S.replaceObjVal(copy, replaceSpecialSymbols);
+        return S.cons(JSON.stringify(copy), replaceSpecialSymbols(rest));
       }
 
-      if (s.isAtom(first)) {
-        return s.cons(specailSymbols(first), replaceSpecialSymbols(rest));
+      if (S.isAtom(first)) {
+        return S.cons(specailSymbols(first), replaceSpecialSymbols(rest));
       }
 
-      return s.cons(replaceSpecialSymbols(first), replaceSpecialSymbols(rest));
+      return S.cons(replaceSpecialSymbols(first), replaceSpecialSymbols(rest));
     }
 
     function format(output) {
       const replaced = replaceSpecialSymbols(output);
 
-      if (s.isList(replaced)) {
+      if (S.isList(replaced)) {
         const closed = parens(replaced);
         return closed.join()
           .replace(/,/g, ' ');

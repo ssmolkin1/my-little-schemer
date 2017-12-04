@@ -1,54 +1,54 @@
-function loadTo(s) {
-  s.isEqobj = (o1, o2) => {
-    if (!s.isObject(o1) || !s.isObject(o2)) {
+function loadTo(S) {
+  S.isEqobj = (o1, o2) => {
+    if (!S.isObject(o1) || !S.isObject(o2)) {
       throw new TypeError('The Law of isEqobj: isEqobj can only be used to compare two objects.');
     }
 
-    return s.isEqlist(Object.entries(o1), Object.entries(o2));
+    return S.isEqlist(Object.entries(o1), Object.entries(o2));
   };
 
-  s.isEqan = (a1, a2) => {
-    if (s.isList(a1) || s.isList(a2)) {
+  S.isEqan = (a1, a2) => {
+    if (S.isList(a1) || S.isList(a2)) {
       throw new TypeError('The Law of isEqan: isEqan can only be used to compare two atoms.');
     }
 
-    if (s.isObject(a1) && s.isObject(a2)) {
-      return s.isEqobj(a1, a2);
+    if (S.isObject(a1) && S.isObject(a2)) {
+      return S.isEqobj(a1, a2);
     }
 
-    if (s.isObject(a1) || s.isObject(a2)) {
+    if (S.isObject(a1) || S.isObject(a2)) {
       return false;
     }
 
     return a1 === a2;
   };
 
-  s.isEqual = (s1, s2) => {
-    if (s.isAtom(s1) && s.isAtom(s2)) {
-      return s.isEqan(s1, s2);
+  S.isEqual = (s1, s2) => {
+    if (S.isAtom(s1) && S.isAtom(s2)) {
+      return S.isEqan(s1, s2);
     }
 
-    if (s.isAtom(s1) || s.isAtom(s2)) {
+    if (S.isAtom(s1) || S.isAtom(s2)) {
       return false;
     }
 
-    return s.isEqlist(s1, s2);
+    return S.isEqlist(s1, s2);
   };
 
-  s.isEqlist = (l1, l2) => {
-    if (s.isAtom(l1) || s.isAtom(l2)) {
+  S.isEqlist = (l1, l2) => {
+    if (S.isAtom(l1) || S.isAtom(l2)) {
       throw new TypeError('The Law of isEqlist: isEqlist can only be used to compare two lists.');
     }
 
-    if (s.isNull(l1) && s.isNull(l2)) {
+    if (S.isNull(l1) && S.isNull(l2)) {
       return true;
     }
 
-    if (s.isNull(l1) || s.isNull(l2)) {
+    if (S.isNull(l1) || S.isNull(l2)) {
       return false;
     }
 
-    return s.isEqual(s.car(l1), s.car(l2)) && s.isEqual(s.cdr(l1), s.cdr(l2));
+    return S.isEqual(S.car(l1), S.car(l2)) && S.isEqual(S.cdr(l1), S.cdr(l2));
   };
 }
 
