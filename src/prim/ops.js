@@ -116,7 +116,11 @@ function loadTo(S) {
     return n - 1;
   };
 
-  S.y = le => (f => f(f))(f => le(x => (f(f))(x)));
+  /**
+   * The applicative order Y-combinator.
+   * @param {function} le
+   */
+  S.Y = le => (f => f(f))(f => le(x => (f(f))(x)));
 }
 
 module.exports = { loadTo };
