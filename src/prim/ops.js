@@ -115,6 +115,8 @@ function loadTo(S) {
 
     return n - 1;
   };
+
+  S.y = le => (f => f(f))(f => le(x => (f(f))(x)));
 }
 
 module.exports = { loadTo };
