@@ -1,5 +1,5 @@
 # My Little Schemer
-An interface for interoperable Scheme and JavaScript. Inspired by [The Little Schemer, 4th Ed](https://mitpress.mit.edu/books/little-schemer). **This library is ready for use, but documentation is still in progress. For now, read the comments in the source code..."
+An interface for interoperable Scheme and JavaScript. Inspired by [The Little Schemer, 4th Ed](https://mitpress.mit.edu/books/little-schemer). **This library is ready for use, but documentation is still in progress. For now, read the comments in the source code...**
 
 ## Design and purpose
 This module provides an interface for integrating Scheme into JavaScript applications. The primary goal is interoperability, rather than writing in Scheme alone (although that is an option). Hence, this dialect of Scheme, while inspired [The Little Schemer, 4th Ed](https://mitpress.mit.edu/books/little-schemer), has some additions and changes that make it more useful for integration in JavaScript apps.
